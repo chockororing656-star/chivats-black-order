@@ -1,101 +1,100 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <title>CHIVATS BLACK ORDER</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #1e1e1e;
-            color: #fff;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-        }
-        input, textarea, button {
-            width: 100%;
-            margin: 10px 0;
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 6px;
-            border: none;
-        }
-        input, textarea {
-            background: #fff;
-            color: #000;
-        }
-        button {
-            background: #2ecc71;
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #27ae60;
-        }
-    </style>
-</head>
-
-<body>
-
-<h1>🛒 สั่งออเดอร์ CHIVATS BLACK</h1>
-
-<input type="text" id="customerName" placeholder="ชื่อลูกค้า">
-<input type="text" id="customerPhone" placeholder="เบอร์โทร">
-<textarea id="orderDetail" rows="4" placeholder="รายละเอียดออเดอร์"></textarea>
-
-<button onclick="sendOrder()">สั่งออเดอร์</button>
-
 <script>
-function sendOrder() {
-    const name = document.getElementById("customerName").value.trim();
-    const phone = document.getElementById("customerPhone").value.trim();
-    const detail = document.getElementById("orderDetail").value.trim();
+/* ================= Firebase ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
+  authDomain: "chivats-black-order.firebaseapp.com",
+  projectId: "chivats-black-order",
+  storageBucket: "chivats-black-order.appspot.com",
+  messagingSenderId: "1012545451252",
+  appId: "1:1012545451252:web:0df1a74dc553f201bddaa1"
+};
 
-    if (!name || !phone || !detail) {
-        alert("กรุณากรอกข้อมูลให้ครบ");
-        return;
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* ================= เมนู (แก้ไขแล้ว) ================= */
+const menuData = [
+  { name: "เคบับไก่ ไซต์ L", price: 69 },
+  { name: "เคบับไก่ ไซต์ M", price: 60 },
+  { name: "เฟรนฟรายเขย่า L", price: 45 },
+  { name: "เฟรนฟรายเขย่า M", price: 40 },
+  { name: "ไก่ป๊อปเขย่า L", price: 45 },
+  { name: "ไก่ป๊อปเขย่า M", price: 40 },
+  { name: "เฟรนฟราย + ไก่ป๊อป", price: 45 },
+  { name: "เพิ่มชีส", price: 20 }
+];
+
+const cart = {};
+const menuDiv = document.getElementById("menu");
+
+menuData.forEach((item, i) => {
+  cart[i] = 0;
+  menuDiv.innerHTML += `
+    <div class="menu-item">
+      <div>${item.name} ${item.price}฿</div>
+      <div class="qty-box">
+        <button onclick="changeQty(${i}, -1)">-</button>
+        <div class="qty" id="qty${i}">0</div>
+        <button onclick="changeQty(${i}, 1)">+</button>
+      </div>
+    </div>
+  `;
+});
+
+function changeQty(i, delta) {
+  cart[i] = Math.max(0, cart[i] + delta);
+  document.getElementById("qty" + i).innerText = cart[i];
+  calcTotal();
+}
+
+function calcTotal() {
+  let total = 0;
+  menuData.forEach((item, i) => {
+    total += item.price * cart[i];
+  });
+  document.getElementById("total").innerText = total;
+}
+
+/* ================= ส่งออเดอร์ ================= */
+function submitOrder() {
+  const name = document.getElementById("customerName").value.trim();
+  const phone = document.getElementById("customerPhone").value.trim();
+  const payment = document.querySelector('input[name="pay"]:checked').value;
+
+  if (!name || !phone) {
+    alert("กรุณากรอกชื่อและเบอร์โทร");
+    return;
+  }
+
+  const items = [];
+  menuData.forEach((item, i) => {
+    if (cart[i] > 0) {
+      items.push({ name: item.name, price: item.price, qty: cart[i] });
     }
+  });
 
-    const BOT_TOKEN = "ใส่_BOT_TOKEN_ของคุณ";
-    const CHAT_ID = "ใส่_CHAT_ID_ของคุณ";
+  if (items.length === 0) {
+    alert("กรุณาเลือกเมนู");
+    return;
+  }
 
-    const message =
-`📦 ออเดอร์ใหม่ CHIVATS BLACK
-👤 ชื่อ: ${name}
-📞 เบอร์: ${phone}
-📝 รายการ:
-${detail}`;
+  const order = {
+    name,
+    phone,
+    payment,
+    items,
+    total: Number(document.getElementById("total").innerText),
+    time: firebase.firestore.FieldValue.serverTimestamp()
+  };
 
-    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            chat_id: CHAT_ID,
-            text: message
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.ok) {
-            alert("✅ รับออเดอร์เรียบร้อย");
-            document.getElementById("customerName").value = "";
-            document.getElementById("customerPhone").value = "";
-            document.getElementById("orderDetail").value = "";
-        } else {
-            alert("❌ ส่งไม่สำเร็จ");
-            console.log(data);
-        }
+  db.collection("orders").add(order)
+    .then(() => {
+      alert("✅ ออเดอร์เข้าแล้ว ขอบคุณครับ");
+      location.reload();
     })
     .catch(err => {
-        alert("❌ เกิดข้อผิดพลาด");
-        console.error(err);
+      alert("❌ ส่งออเดอร์ไม่สำเร็จ");
+      console.error(err);
     });
 }
 </script>
-
-</body>
-</html>
