@@ -1,194 +1,136 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>CHIVATS BLACK ORDER</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>CHIVATS BLACK ORDER</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-
-    h1 {
-      color: #f5c16c;
-    }
-
-    .menu {
-      max-width: 420px;
-    }
-
-    .item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .controls button {
-      width: 32px;
-      height: 32px;
-      font-size: 18px;
-      margin: 0 3px;
-    }
-
-    .total {
-      margin-top: 20px;
-      font-size: 22px;
-      color: #00ff99;
-    }
-
-    .payment {
-      margin-top: 20px;
-    }
-
-    .payment label {
-      display: block;
-      margin-bottom: 8px;
-      cursor: pointer;
-    }
-
-    .order-btn {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      font-size: 18px;
-      background: #f5c16c;
-      border: none;
-      cursor: pointer;
-    }
-
-    .summary {
-      margin-top: 20px;
-      background: #222;
-      padding: 15px;
-      display: none;
-    }
-  </style>
+<style>
+body{
+  background:#111;
+  color:#fff;
+  font-family:Arial;
+  padding:20px;
+}
+h1{color:#f5c16c}
+.item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+.controls{
+  display:flex;
+  align-items:center;
+}
+.controls button{
+  width:32px;
+  height:32px;
+  font-size:18px;
+}
+.qty{
+  width:30px;
+  text-align:center;
+}
+.total{
+  margin-top:20px;
+  font-size:22px;
+  color:#00ff99;
+}
+.order-btn{
+  margin-top:20px;
+  width:100%;
+  padding:14px;
+  font-size:18px;
+  background:#f5c16c;
+  border:none;
+}
+.summary{
+  margin-top:20px;
+  background:#222;
+  padding:15px;
+  display:none;
+}
+</style>
 </head>
 
 <body>
 
-  <h1>เมนู</h1>
+<h1>เมนู</h1>
 
-  <div class="menu">
+<div id="menu"></div>
 
-    <div class="item">
-      <span>เคบับไก่ L 69฿</span>
-      <div class="controls">
-        <button onclick="removeItem(69)">-</button>
-        <button onclick="addItem('เคบับไก่ L',69)">+</button>
-      </div>
-    </div>
+<div class="total">
+💰 ยอดรวม: <span id="total">0</span> บาท
+</div>
 
-    <div class="item">
-      <span>เคบับไก่ M 60฿</span>
-      <div class="controls">
-        <button onclick="removeItem(60)">-</button>
-        <button onclick="addItem('เคบับไก่ M',60)">+</button>
-      </div>
-    </div>
+<h3>วิธีชำระเงิน</h3>
+<label><input type="radio" name="pay" value="เงินสด"> เงินสด</label><br>
+<label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
 
-    <div class="item">
-      <span>เฟรนฟรายเขย่า L 45฿</span>
-      <div class="controls">
-        <button onclick="removeItem(45)">-</button>
-        <button onclick="addItem('เฟรนฟรายเขย่า L',45)">+</button>
-      </div>
-    </div>
+<button class="order-btn" onclick="submitOrder()">📦 ส่งออเดอร์</button>
 
-    <div class="item">
-      <span>เฟรนฟรายเขย่า M 40฿</span>
-      <div class="controls">
-        <button onclick="removeItem(40)">-</button>
-        <button onclick="addItem('เฟรนฟรายเขย่า M',40)">+</button>
-      </div>
-    </div>
+<div class="summary" id="summary"></div>
 
-    <div class="item">
-      <span>ไก่ป๊อปเขย่า L 45฿</span>
-      <div class="controls">
-        <button onclick="removeItem(45)">-</button>
-        <button onclick="addItem('ไก่ป๊อปเขย่า L',45)">+</button>
-      </div>
-    </div>
+<script>
+const items = [
+ {name:"เคบับไก่ L",price:69,qty:0},
+ {name:"เคบับไก่ M",price:60,qty:0},
+ {name:"เฟรนฟรายเขย่า L",price:45,qty:0},
+ {name:"เฟรนฟรายเขย่า M",price:40,qty:0},
+ {name:"ไก่ป๊อปเขย่า L",price:45,qty:0},
+ {name:"ไก่ป๊อปเขย่า M",price:40,qty:0}
+];
 
-    <div class="item">
-      <span>ไก่ป๊อปเขย่า M 40฿</span>
-      <div class="controls">
-        <button onclick="removeItem(40)">-</button>
-        <button onclick="addItem('ไก่ป๊อปเขย่า M',40)">+</button>
-      </div>
-    </div>
+function render(){
+ let html="";
+ items.forEach((i,idx)=>{
+   html+=`
+   <div class="item">
+     <span>${i.name} ${i.price}฿</span>
+     <div class="controls">
+       <button onclick="changeQty(${idx},-1)">-</button>
+       <div class="qty">${i.qty}</div>
+       <button onclick="changeQty(${idx},1)">+</button>
+     </div>
+   </div>`;
+ });
+ document.getElementById("menu").innerHTML=html;
+ updateTotal();
+}
 
-  </div>
+function changeQty(i,delta){
+ items[i].qty+=delta;
+ if(items[i].qty<0) items[i].qty=0;
+ render();
+}
 
-  <div class="total">
-    💰 ยอดรวม: <span id="totalPrice">0</span> บาท
-  </div>
+function updateTotal(){
+ let sum=0;
+ items.forEach(i=>sum+=i.qty*i.price);
+ document.getElementById("total").innerText=sum;
+}
 
-  <div class="payment">
-    <h3>วิธีชำระเงิน</h3>
-    <label>
-      <input type="radio" name="pay" value="เงินสด"> เงินสด
-    </label>
-    <label>
-      <input type="radio" name="pay" value="PromptPay"> PromptPay
-    </label>
-  </div>
+function submitOrder(){
+ const pay=document.querySelector('input[name="pay"]:checked');
+ if(!pay){alert("เลือกวิธีชำระเงิน");return;}
 
-  <button class="order-btn" onclick="submitOrder()">📦 ส่งออเดอร์</button>
+ let list=items.filter(i=>i.qty>0);
+ if(list.length===0){alert("ยังไม่ได้เลือกเมนู");return;}
 
-  <div class="summary" id="summary"></div>
+ let text="<h3>สรุปออเดอร์</h3>";
+ list.forEach(i=>{
+   text+=`${i.name} x ${i.qty} = ${i.qty*i.price}฿<br>`;
+ });
+ text+=`<br><b>รวม ${document.getElementById("total").innerText} บาท</b>`;
+ text+=`<br>ชำระเงิน: ${pay.value}`;
 
-  <script>
-    let total = 0;
-    let orders = [];
+ document.getElementById("summary").innerHTML=text;
+ document.getElementById("summary").style.display="block";
+}
 
-    function updateTotal() {
-      document.getElementById("totalPrice").innerText = total;
-    }
-
-    function addItem(name, price) {
-      total += price;
-      orders.push(name + " " + price + "฿");
-      updateTotal();
-    }
-
-    function removeItem(price) {
-      if (total - price >= 0) {
-        total -= price;
-        updateTotal();
-      }
-    }
-
-    function submitOrder() {
-      let payment = document.querySelector('input[name="pay"]:checked');
-
-      if (orders.length === 0) {
-        alert("ยังไม่ได้เลือกเมนู");
-        return;
-      }
-
-      if (!payment) {
-        alert("กรุณาเลือกวิธีชำระเงิน");
-        return;
-      }
-
-      let summaryText = `
-        <h3>สรุปออเดอร์</h3>
-        <p>${orders.join("<br>")}</p>
-        <p><strong>รวม: ${total} บาท</strong></p>
-        <p>ชำระเงิน: ${payment.value}</p>
-      `;
-
-      document.getElementById("summary").innerHTML = summaryText;
-      document.getElementById("summary").style.display = "block";
-    }
-  </script>
+render();
+</script>
 
 </body>
 </html>
