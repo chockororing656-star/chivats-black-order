@@ -1,193 +1,90 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CHIVATS BLACK ORDER</title>
-
-<!-- Firebase CDN (ใช้แบบนี้กับ GitHub Pages ได้) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<style>
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#111;
-  color:#fff;
-}
-.container{
-  max-width:480px;
-  margin:auto;
-  padding:20px;
-}
-h1{
-  color:#f5c16c;
-}
-.menu-item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin:10px 0;
-}
-.qty-box{
-  display:flex;
-  align-items:center;
-}
-.qty-box button{
-  width:32px;
-  height:32px;
-  font-size:18px;
-}
-.qty{
-  width:30px;
-  text-align:center;
-}
-.total{
-  color:#3cff8f;
-  font-size:20px;
-  margin:15px 0;
-}
-input{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  font-size:16px;
-}
-.payment{
-  display:flex;
-  gap:20px;
-  margin:10px 0;
-}
-.order-btn{
-  width:100%;
-  padding:15px;
-  background:#f5c16c;
-  border:none;
-  font-size:18px;
-  cursor:pointer;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>CHIVATS BLACK ORDER</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 20px;
+    }
+    h2 { text-align: center; }
+    input, textarea, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background: #00c853;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:active {
+      background: #00a844;
+    }
+  </style>
 </head>
-
 <body>
-<div class="container">
-  <h1>เมนู</h1>
 
-  <div id="menu"></div>
+<h2>🛒 สั่งออเดอร์ CHIVATS BLACK</h2>
 
-  <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
+<input id="name" placeholder="ชื่อลูกค้า">
+<input id="phone" placeholder="เบอร์โทร">
+<textarea id="order" placeholder="รายการอาหาร"></textarea>
 
-  <h3>ข้อมูลลูกค้า</h3>
-  <input id="customerName" placeholder="ชื่อผู้สั่ง"/>
-  <input id="customerPhone" placeholder="เบอร์โทร"/>
-
-  <h3>วิธีชำระเงิน</h3>
-  <div class="payment">
-    <label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
-    <label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
-  </div>
-
-  <button class="order-btn" onclick="submitOrder()">📦 ส่งออเดอร์</button>
-</div>
+<button onclick="sendOrder()">สั่งออเดอร์</button>
 
 <script>
-/* ================= Firebase ================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
-  authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order",
-  storageBucket: "chivats-black-order.appspot.com",
-  messagingSenderId: "1012545451252",
-  appId: "1:1012545451252:web:0df1a74dc553f201bddaa1"
-};
+function sendOrder() {
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const order = document.getElementById("order").value;
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-/* ================= เมนู ================= */
-const menuData = [
-  {name:"เคบับไก่ L", price:69},
-  {name:"เคบับไก่ M", price:60},
-  {name:"เฟรนฟรายเขย่า L", price:45},
-  {name:"เฟรนฟรายเขย่า M", price:40},
-  {name:"ไก่ป๊อปเขย่า L", price:45},
-  {name:"ไก่ป๊อปเขย่า M", price:40}
-];
-
-const cart = {};
-const menuDiv = document.getElementById("menu");
-
-menuData.forEach((item,i)=>{
-  cart[i]=0;
-  menuDiv.innerHTML += `
-    <div class="menu-item">
-      <div>${item.name} ${item.price}฿</div>
-      <div class="qty-box">
-        <button onclick="changeQty(${i},-1)">-</button>
-        <div class="qty" id="qty${i}">0</div>
-        <button onclick="changeQty(${i},1)">+</button>
-      </div>
-    </div>
-  `;
-});
-
-function changeQty(i,delta){
-  cart[i]=Math.max(0,cart[i]+delta);
-  document.getElementById("qty"+i).innerText=cart[i];
-  calcTotal();
-}
-
-function calcTotal(){
-  let total=0;
-  menuData.forEach((item,i)=>{
-    total+=item.price*cart[i];
-  });
-  document.getElementById("total").innerText=total;
-}
-
-/* ================= ส่งออเดอร์ ================= */
-function submitOrder(){
-  const name=document.getElementById("customerName").value.trim();
-  const phone=document.getElementById("customerPhone").value.trim();
-  const payment=document.querySelector('input[name="pay"]:checked').value;
-
-  if(!name || !phone){
-    alert("กรุณากรอกชื่อและเบอร์โทร");
+  if (!name || !order) {
+    alert("กรุณากรอกชื่อและรายการอาหาร");
     return;
   }
 
-  const items=[];
-  menuData.forEach((item,i)=>{
-    if(cart[i]>0){
-      items.push({...item,qty:cart[i]});
+  const text =
+`📦 ออเดอร์ใหม่
+👤 ชื่อ: ${name}
+📞 โทร: ${phone}
+🍔 รายการ:
+${order}`;
+
+  const token = "YOUR_BOT_TOKEN";
+  const chatId = "5665607150";
+
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+  fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: text
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) {
+      alert("✅ รับออเดอร์แล้วครับ");
+      document.getElementById("name").value = "";
+      document.getElementById("phone").value = "";
+      document.getElementById("order").value = "";
+    } else {
+      alert("❌ ส่งไม่สำเร็จ");
     }
   });
-
-  if(items.length===0){
-    alert("กรุณาเลือกเมนู");
-    return;
-  }
-
-  const order={
-    name,
-    phone,
-    payment,
-    items,
-    total:Number(document.getElementById("total").innerText),
-    time: new Date()
-  };
-
-  db.collection("orders").add(order)
-    .then(()=>{
-      alert("✅ ออเดอร์เข้าแล้ว ขอบคุณครับ");
-      location.reload();
-    })
-    .catch(err=>{
-      alert("❌ ส่งออเดอร์ไม่สำเร็จ");
-      console.error(err);
-    });
 }
 </script>
+
 </body>
 </html>
