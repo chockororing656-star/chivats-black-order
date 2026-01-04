@@ -8,93 +8,50 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#111;
-  color:#fff;
-}
-.container{
-  max-width:900px;
-  margin:auto;
-  padding:20px;
-}
-h1{
-  color:#f5c16c;
-}
-.order{
-  border:1px solid #333;
-  padding:15px;
-  margin:15px 0;
-  border-radius:8px;
-}
-.order h3{
-  margin:0 0 10px 0;
-  color:#3cff8f;
-}
-.item{
-  margin-left:15px;
-}
-.loading{
-  opacity:0.6;
-}
+body{margin:0;font-family:sans-serif;background:#111;color:#fff}
+.container{max-width:900px;margin:auto;padding:20px}
+h1{color:#f5c16c}
+.order{border:1px solid #333;padding:15px;margin:15px 0;border-radius:8px}
+.item{margin-left:15px}
 </style>
 </head>
 
 <body>
 <div class="container">
   <h1>📦 ออเดอร์ทั้งหมด</h1>
-  <div id="orders" class="loading">กำลังโหลด...</div>
+  <div id="orders">กำลังโหลด...</div>
 </div>
 
 <script>
-/* ===== Firebase Config (ต้องตรงกับหน้า index.html) ===== */
-const firebaseConfig = {
+firebase.initializeApp({
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
   authDomain: "chivats-black-order.firebaseapp.com",
   projectId: "chivats-black-order",
-  storageBucket: "chivats-black-order.appspot.com",
-  messagingSenderId: "1012545451252",
-  appId: "1:1012545451252:web:0df1a74dc553f201bddaa1"
-};
+});
 
-firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-
-/* ===== ดึงออเดอร์ ===== */
 const ordersDiv = document.getElementById("orders");
 
 db.collection("orders")
-  .orderBy("createdAt", "desc")
-  .onSnapshot(snapshot => {
-
-    ordersDiv.classList.remove("loading");
-    ordersDiv.innerHTML = "";
-
-    if(snapshot.empty){
-      ordersDiv.innerHTML = "ยังไม่มีออเดอร์";
-      return;
-    }
-
-    snapshot.forEach(doc => {
-      const o = doc.data();
-
-      let html = `
-        <div class="order">
-          <h3>🧾 ${o.name} (${o.phone})</h3>
-          <div>💳 ชำระเงิน: ${o.payment}</div>
-          <div>📋 รายการ:</div>
-      `;
-
-      o.items.forEach(i=>{
-        html += `<div class="item">- ${i.name} x ${i.qty} = ${i.price * i.qty}฿</div>`;
-      });
-
-      html += `<strong>💰 รวม: ${o.total} บาท</strong></div>`;
-      ordersDiv.innerHTML += html;
+.orderBy("createdAt","desc")
+.onSnapshot(snap=>{
+  ordersDiv.innerHTML="";
+  if(snap.empty){
+    ordersDiv.innerHTML="ยังไม่มีออเดอร์";
+    return;
+  }
+  snap.forEach(d=>{
+    const o=d.data();
+    let html=`<div class="order">
+      <b>${o.name}</b> (${o.phone})<br>
+      ชำระเงิน: ${o.payment}<br>`;
+    o.items.forEach(i=>{
+      html+=`<div class="item">- ${i.name} x ${i.qty}</div>`;
     });
+    html+=`<b>รวม ${o.total} บาท</b></div>`;
+    ordersDiv.innerHTML+=html;
   });
+});
 </script>
-
 </body>
 </html>
