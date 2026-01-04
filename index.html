@@ -169,6 +169,43 @@ function submitOrder() {
   location.reload();
 }
 </script>
+  <script>
+const TELEGRAM_TOKEN = "8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q";
+const CHAT_ID = "5665607150"; // ID ของเครื่องร้าน (จาก getUpdates)
+
+function submitOrder(){
+  const name = document.getElementById("customerName").value;
+  const phone = document.getElementById("customerPhone").value;
+  const payment = document.querySelector('input[name="pay"]:checked').value;
+
+  let orderText = `🛒 ออเดอร์ใหม่ CHIVATS BLACK\n\n`;
+  menuData.forEach((item,i)=>{
+    if(cart[i]>0){
+      orderText += `• ${item.name} x ${cart[i]} = ${item.price*cart[i]} บาท\n`;
+    }
+  });
+
+  orderText += `\n💰 ยอดรวม: ${document.getElementById("total").innerText} บาท`;
+  orderText += `\n👤 ชื่อ: ${name}`;
+  orderText += `\n📞 เบอร์: ${phone}`;
+  orderText += `\n💳 ชำระ: ${payment}`;
+
+  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      chat_id: CHAT_ID,
+      text: orderText
+    })
+  }).then(()=>{
+    alert("✅ ร้านได้รับออเดอร์แล้ว");
+    location.reload();
+  }).catch(()=>{
+    alert("❌ ส่งออเดอร์ไม่สำเร็จ");
+  });
+}
+</script>
 </body>
 </html>
+
 
