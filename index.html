@@ -4,26 +4,28 @@
 <meta charset="UTF-8">
 <title>CHIVATS BLACK ORDER</title>
 <style>
-body {
+body{
   background:#111;
   color:#fff;
   font-family:Arial;
   padding:20px;
 }
-.item {
+h2{margin-bottom:20px;}
+.item{
   display:flex;
   justify-content:space-between;
   align-items:center;
   margin-bottom:15px;
 }
-button {
-  width:40px;
-  height:40px;
+button{
+  width:36px;
+  height:36px;
   font-size:20px;
 }
-.count {
+.count{
   margin:0 10px;
-  font-size:18px;
+  min-width:20px;
+  text-align:center;
 }
 </style>
 </head>
@@ -31,27 +33,35 @@ button {
 <body>
 
 <h2>เมนู</h2>
-
-<div class="item">
-  <span>เคบับไก่ L 69฿</span>
-  <div>
-    <button onclick="minus(0)">-</button>
-    <span class="count" id="count0">0</span>
-    <button onclick="plus(0)">+</button>
-  </div>
-</div>
-
-<div class="item">
-  <span>เคบับไก่ M 60฿</span>
-  <div>
-    <button onclick="minus(1)">-</button>
-    <span class="count" id="count1">0</span>
-    <button onclick="plus(1)">+</button>
-  </div>
-</div>
+<div id="menu"></div>
 
 <script>
-let counts = [0,0];
+const menus = [
+  {name:"เคบับไก่ L", price:69},
+  {name:"เคบับไก่ M", price:60},
+  {name:"เฟรนช์ฟรายเขย่า L", price:45},
+  {name:"เฟรนช์ฟรายเขย่า M", price:40},
+  {name:"ไก่ป๊อปเขย่า L", price:45},
+  {name:"ไก่ป๊อปเขย่า M", price:40},
+  {name:"เฟรนช์ฟราย + ไก่ป๊อป", price:45}
+];
+
+let counts = Array(menus.length).fill(0);
+
+const menuDiv = document.getElementById("menu");
+
+menus.forEach((m,i)=>{
+  menuDiv.innerHTML += `
+    <div class="item">
+      <span>${m.name} ${m.price}฿</span>
+      <div>
+        <button onclick="minus(${i})">-</button>
+        <span class="count" id="count${i}">0</span>
+        <button onclick="plus(${i})">+</button>
+      </div>
+    </div>
+  `;
+});
 
 function plus(i){
   counts[i]++;
@@ -59,7 +69,7 @@ function plus(i){
 }
 
 function minus(i){
-  if(counts[i] > 0){
+  if(counts[i]>0){
     counts[i]--;
     document.getElementById("count"+i).innerText = counts[i];
   }
