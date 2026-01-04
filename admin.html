@@ -5,6 +5,10 @@
 <title>ADMIN – CHIVATS BLACK</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
 body{
   margin:0;
@@ -13,105 +17,82 @@ body{
   color:#fff;
 }
 .container{
-  max-width:420px;
-  margin:60px auto;
+  max-width:800px;
+  margin:auto;
   padding:20px;
 }
-.hidden{ display:none; }
-
-input,button{
-  width:100%;
-  padding:12px;
-  margin:10px 0;
-  font-size:16px;
-}
-button{
-  background:#f5c16c;
-  border:none;
-  cursor:pointer;
-}
 .order{
-  border:1px solid #333;
-  padding:10px;
-  margin:10px 0;
+  border:1px solid #444;
+  padding:15px;
+  margin-bottom:15px;
+  border-radius:8px;
 }
 .accept{
   background:#3cff8f;
+  border:none;
+  padding:10px;
+  cursor:pointer;
+  width:100%;
+  font-size:16px;
 }
 </style>
 </head>
 
 <body>
-
-<!-- LOGIN -->
-<div class="container" id="loginBox">
-  <h2>🔐 แอดมินล็อกอิน</h2>
-  <input type="password" id="password" placeholder="รหัสผ่านแอดมิน">
-  <button onclick="login()">เข้าใช้งาน</button>
-</div>
-
-<!-- ADMIN -->
-<div class="container hidden" id="adminBox">
-  <h2>📦 ออเดอร์เข้า</h2>
-  <div id="orders"></div>
+<div class="container">
+  <h1>📋 ออเดอร์ทั้งหมด</h1>
+  <div id="orders">กำลังโหลด...</div>
 </div>
 
 <script>
-/* ===== ตั้งรหัสผ่านตรงนี้ ===== */
-const ADMIN_PASSWORD = "1234";
-
-/* ===== Firebase ===== */
-const firebaseConfig = {
+/* 🔥 Firebase Config (เหมือนหน้า index.html) */
+firebase.initializeApp({
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
   authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order"
-};
+  projectId: "chivats-black-order",
+});
 
-firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const ordersDiv = document.getElementById("orders");
 
-/* ===== LOGIN ===== */
-function login(){
-  const pw = document.getElementById("password").value;
-  if(pw !== ADMIN_PASSWORD){
-    alert("❌ รหัสผ่านไม่ถูกต้อง");
-    return;
-  }
-  document.getElementById("loginBox").classList.add("hidden");
-  document.getElementById("adminBox").classList.remove("hidden");
-  loadOrders();
-}
+/* 🔁 ดึงออเดอร์แบบเรียลไทม์ */
+db.collection("orders")
+  .orderBy("time","desc")
+  .onSnapshot(snapshot=>{
+    ordersDiv.innerHTML = "";
+    if(snapshot.empty){
+      ordersDiv.innerHTML = "ยังไม่มีออเดอร์";
+      return;
+    }
 
-/* ===== LOAD ORDERS ===== */
-function loadOrders(){
-  db.collection("orders").orderBy("time","desc")
-    .onSnapshot(snapshot=>{
-      const box = document.getElementById("orders");
-      box.innerHTML = "";
-      snapshot.forEach(doc=>{
-        const o = doc.data();
-        box.innerHTML += `
-          <div class="order">
-            <b>${o.name}</b> (${o.phone})<br>
-            💰 ${o.total} บาท<br>
-            <button class="accept" onclick="acceptOrder('${doc.id}')">
-              รับออเดอร์
-            </button>
-          </div>
-        `;
+    snapshot.forEach(doc=>{
+      const o = doc.data();
+      let items = "";
+      o.items.forEach(i=>{
+        items += `- ${i.name} x ${i.qty}<br>`;
       });
-    });
-}
 
-/* ===== ACCEPT ===== */
+      ordersDiv.innerHTML += `
+        <div class="order">
+          <b>ชื่อ:</b> ${o.name}<br>
+          <b>เบอร์:</b> ${o.phone}<br>
+          <b>รายการ:</b><br>${items}
+          <b>ยอด:</b> ${o.total} บาท<br>
+          <b>ชำระ:</b> ${o.payment}<br><br>
+          <button class="accept" onclick="acceptOrder('${doc.id}')">
+            ✅ รับออเดอร์
+          </button>
+        </div>
+      `;
+    });
+  });
+
 function acceptOrder(id){
-  alert("✅ รับออเดอร์แล้ว");
+  db.collection("orders").doc(id).update({
+    status:"accepted"
+  });
+  alert("รับออเดอร์แล้ว");
 }
 </script>
-
-<!-- Firebase CDN -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 </body>
 </html>
