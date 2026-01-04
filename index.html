@@ -1,80 +1,135 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<title>CHIVATS BLACK ORDER</title>
-<style>
-body{
-  background:#111;
-  color:#fff;
-  font-family:Arial;
-  padding:20px;
-}
-h2{margin-bottom:20px;}
-.item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:15px;
-}
-button{
-  width:36px;
-  height:36px;
-  font-size:20px;
-}
-.count{
-  margin:0 10px;
-  min-width:20px;
-  text-align:center;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>CHIVATS BLACK ORDER</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #f5c16c;
+    }
+
+    .menu {
+      max-width: 400px;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .controls button {
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+      margin: 0 3px;
+    }
+
+    .total {
+      margin-top: 30px;
+      font-size: 22px;
+      color: #00ff99;
+    }
+  </style>
 </head>
 
 <body>
 
-<h2>เมนู</h2>
-<div id="menu"></div>
+  <h1>เมนู</h1>
 
-<script>
-const menus = [
-  {name:"เคบับไก่ L", price:69},
-  {name:"เคบับไก่ M", price:60},
-  {name:"เฟรนช์ฟรายเขย่า L", price:45},
-  {name:"เฟรนช์ฟรายเขย่า M", price:40},
-  {name:"ไก่ป๊อปเขย่า L", price:45},
-  {name:"ไก่ป๊อปเขย่า M", price:40},
-  {name:"เฟรนช์ฟราย + ไก่ป๊อป", price:45}
-];
+  <div class="menu">
 
-let counts = Array(menus.length).fill(0);
-
-const menuDiv = document.getElementById("menu");
-
-menus.forEach((m,i)=>{
-  menuDiv.innerHTML += `
     <div class="item">
-      <span>${m.name} ${m.price}฿</span>
-      <div>
-        <button onclick="minus(${i})">-</button>
-        <span class="count" id="count${i}">0</span>
-        <button onclick="plus(${i})">+</button>
+      <span>เคบับไก่ L 69฿</span>
+      <div class="controls">
+        <button onclick="removeItem(69)">-</button>
+        <button onclick="addItem(69)">+</button>
       </div>
     </div>
-  `;
-});
 
-function plus(i){
-  counts[i]++;
-  document.getElementById("count"+i).innerText = counts[i];
-}
+    <div class="item">
+      <span>เคบับไก่ M 60฿</span>
+      <div class="controls">
+        <button onclick="removeItem(60)">-</button>
+        <button onclick="addItem(60)">+</button>
+      </div>
+    </div>
 
-function minus(i){
-  if(counts[i]>0){
-    counts[i]--;
-    document.getElementById("count"+i).innerText = counts[i];
-  }
-}
-</script>
+    <div class="item">
+      <span>เฟรนฟรายเขย่า L 45฿</span>
+      <div class="controls">
+        <button onclick="removeItem(45)">-</button>
+        <button onclick="addItem(45)">+</button>
+      </div>
+    </div>
+
+    <div class="item">
+      <span>เฟรนฟรายเขย่า M 40฿</span>
+      <div class="controls">
+        <button onclick="removeItem(40)">-</button>
+        <button onclick="addItem(40)">+</button>
+      </div>
+    </div>
+
+    <div class="item">
+      <span>ไก่ป๊อปเขย่า L 45฿</span>
+      <div class="controls">
+        <button onclick="removeItem(45)">-</button>
+        <button onclick="addItem(45)">+</button>
+      </div>
+    </div>
+
+    <div class="item">
+      <span>ไก่ป๊อปเขย่า M 40฿</span>
+      <div class="controls">
+        <button onclick="removeItem(40)">-</button>
+        <button onclick="addItem(40)">+</button>
+      </div>
+    </div>
+
+    <div class="item">
+      <span>เฟรนฟราย + ไก่ป๊อป 45฿</span>
+      <div class="controls">
+        <button onclick="removeItem(45)">-</button>
+        <button onclick="addItem(45)">+</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="total">
+    💰 ยอดรวมทั้งหมด: <span id="totalPrice">0</span> บาท
+  </div>
+
+  <script>
+    let total = 0;
+
+    function updateTotal() {
+      document.getElementById("totalPrice").innerText = total;
+    }
+
+    function addItem(price) {
+      total += price;
+      updateTotal();
+    }
+
+    function removeItem(price) {
+      if (total - price >= 0) {
+        total -= price;
+        updateTotal();
+      }
+    }
+  </script>
 
 </body>
 </html>
