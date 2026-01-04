@@ -1,4 +1,89 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADMIN – CHIVATS BLACK</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#111;
+  color:#fff;
+}
+.container{
+  max-width:600px;
+  margin:auto;
+  padding:20px;
+}
+h1{
+  color:#f5c16c;
+  text-align:center;
+}
+.order{
+  background:#1e1e1e;
+  padding:15px;
+  margin:15px 0;
+  border-radius:8px;
+}
+.order.received{
+  opacity:0.6;
+  border-left:5px solid #3cff8f;
+}
+.item{
+  font-size:14px;
+  margin-left:10px;
+}
+.total{
+  color:#f5c16c;
+  font-size:18px;
+}
+.time{
+  font-size:12px;
+  color:#aaa;
+}
+button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  font-size:16px;
+  border:none;
+  cursor:pointer;
+}
+.receive-btn{
+  background:#3cff8f;
+}
+.hidden{
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="loginBox">
+  <h1>🔐 เข้าสู่ระบบแอดมิน</h1>
+  <input id="password" type="password" placeholder="ใส่รหัสผ่าน" style="width:100%;padding:10px;font-size:16px">
+  <button onclick="login()" style="margin-top:10px;background:#f5c16c;">เข้าใช้งาน</button>
+</div>
+
+<div class="container hidden" id="adminBox">
+  <h1>📋 ออเดอร์ทั้งหมด</h1>
+  <div id="orders"></div>
+</div>
+
 <script>
+/* ================== ตั้งค่า ================== */
+const ADMIN_PASSWORD = "1234"; // 👈 เปลี่ยนรหัสตรงนี้ได้
+
+const TELEGRAM_TOKEN = "8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q";
+const TELEGRAM_CHAT_ID = "5665607150";
+
 /* ================= Firebase ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
@@ -8,92 +93,76 @@ const firebaseConfig = {
   messagingSenderId: "1012545451252",
   appId: "1:1012545451252:web:0df1a74dc553f201bddaa1"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* ================= เมนู (แก้ไขแล้ว) ================= */
-const menuData = [
-  { name: "เคบับไก่ ไซต์ L", price: 69 },
-  { name: "เคบับไก่ ไซต์ M", price: 60 },
-  { name: "เฟรนฟรายเขย่า L", price: 45 },
-  { name: "เฟรนฟรายเขย่า M", price: 40 },
-  { name: "ไก่ป๊อปเขย่า L", price: 45 },
-  { name: "ไก่ป๊อปเขย่า M", price: 40 },
-  { name: "เฟรนฟราย + ไก่ป๊อป", price: 45 }
-];
-
-const cart = {};
-const menuDiv = document.getElementById("menu");
-
-menuData.forEach((item, i) => {
-  cart[i] = 0;
-  menuDiv.innerHTML += `
-    <div class="menu-item">
-      <div>${item.name} ${item.price}฿</div>
-      <div class="qty-box">
-        <button onclick="changeQty(${i}, -1)">-</button>
-        <div class="qty" id="qty${i}">0</div>
-        <button onclick="changeQty(${i}, 1)">+</button>
-      </div>
-    </div>
-  `;
-});
-
-function changeQty(i, delta) {
-  cart[i] = Math.max(0, cart[i] + delta);
-  document.getElementById("qty" + i).innerText = cart[i];
-  calcTotal();
+/* ================= Login ================= */
+function login(){
+  const pass = document.getElementById("password").value;
+  if(pass === ADMIN_PASSWORD){
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("adminBox").classList.remove("hidden");
+    loadOrders();
+  }else{
+    alert("❌ รหัสผ่านไม่ถูกต้อง");
+  }
 }
 
-function calcTotal() {
-  let total = 0;
-  menuData.forEach((item, i) => {
-    total += item.price * cart[i];
-  });
-  document.getElementById("total").innerText = total;
-}
+/* ================= Load Orders ================= */
+function loadOrders(){
+  const ordersDiv = document.getElementById("orders");
 
-/* ================= ส่งออเดอร์ ================= */
-function submitOrder() {
-  const name = document.getElementById("customerName").value.trim();
-  const phone = document.getElementById("customerPhone").value.trim();
-  const payment = document.querySelector('input[name="pay"]:checked').value;
+  db.collection("orders")
+    .orderBy("time","desc")
+    .onSnapshot(snapshot=>{
+      ordersDiv.innerHTML = "";
+      snapshot.forEach(doc=>{
+        const o = doc.data();
+        const received = o.status === "received";
 
-  if (!name || !phone) {
-    alert("กรุณากรอกชื่อและเบอร์โทร");
-    return;
-  }
+        let itemsHtml = "";
+        o.items.forEach(i=>{
+          itemsHtml += `<div class="item">• ${i.name} x ${i.qty}</div>`;
+        });
 
-  const items = [];
-  menuData.forEach((item, i) => {
-    if (cart[i] > 0) {
-      items.push({ name: item.name, price: item.price, qty: cart[i] });
-    }
-  });
+        const time = o.time?.toDate
+          ? o.time.toDate().toLocaleString("th-TH")
+          : "";
 
-  if (items.length === 0) {
-    alert("กรุณาเลือกเมนู");
-    return;
-  }
-
-  const order = {
-    name,
-    phone,
-    payment,
-    items,
-    total: Number(document.getElementById("total").innerText),
-    time: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  db.collection("orders").add(order)
-    .then(() => {
-      alert("✅ ออเดอร์เข้าแล้ว ขอบคุณครับ");
-      location.reload();
-    })
-    .catch(err => {
-      alert("❌ ส่งออเดอร์ไม่สำเร็จ");
-      console.error(err);
+        ordersDiv.innerHTML += `
+          <div class="order ${received ? "received" : ""}">
+            <h3>👤 ${o.name} (${o.phone})</h3>
+            ${itemsHtml}
+            <p class="total">💰 ${o.total} บาท</p>
+            <p>💳 ${o.payment}</p>
+            <p class="time">⏰ ${time}</p>
+            ${
+              received
+              ? "<p>✅ รับออเดอร์แล้ว</p>"
+              : <button class="receive-btn" onclick="receiveOrder('${doc.id}','${o.name}')">✔ รับออเดอร์</button>
+            }
+          </div>
+        `;
+      });
     });
 }
+
+/* ================= Receive Order ================= */
+function receiveOrder(orderId,name){
+  db.collection("orders").doc(orderId).update({
+    status:"received"
+  });
+
+  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: ✅ รับออเดอร์แล้ว\n👤 ${name}
+    })
+  });
+}
 </script>
+
+</body>
+</html>
