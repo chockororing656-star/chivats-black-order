@@ -18,7 +18,7 @@
     }
 
     .menu {
-      max-width: 400px;
+      max-width: 420px;
     }
 
     .item {
@@ -36,9 +36,36 @@
     }
 
     .total {
-      margin-top: 30px;
+      margin-top: 20px;
       font-size: 22px;
       color: #00ff99;
+    }
+
+    .payment {
+      margin-top: 20px;
+    }
+
+    .payment label {
+      display: block;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .order-btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      font-size: 18px;
+      background: #f5c16c;
+      border: none;
+      cursor: pointer;
+    }
+
+    .summary {
+      margin-top: 20px;
+      background: #222;
+      padding: 15px;
+      display: none;
     }
   </style>
 </head>
@@ -53,7 +80,7 @@
       <span>เคบับไก่ L 69฿</span>
       <div class="controls">
         <button onclick="removeItem(69)">-</button>
-        <button onclick="addItem(69)">+</button>
+        <button onclick="addItem('เคบับไก่ L',69)">+</button>
       </div>
     </div>
 
@@ -61,7 +88,7 @@
       <span>เคบับไก่ M 60฿</span>
       <div class="controls">
         <button onclick="removeItem(60)">-</button>
-        <button onclick="addItem(60)">+</button>
+        <button onclick="addItem('เคบับไก่ M',60)">+</button>
       </div>
     </div>
 
@@ -69,7 +96,7 @@
       <span>เฟรนฟรายเขย่า L 45฿</span>
       <div class="controls">
         <button onclick="removeItem(45)">-</button>
-        <button onclick="addItem(45)">+</button>
+        <button onclick="addItem('เฟรนฟรายเขย่า L',45)">+</button>
       </div>
     </div>
 
@@ -77,7 +104,7 @@
       <span>เฟรนฟรายเขย่า M 40฿</span>
       <div class="controls">
         <button onclick="removeItem(40)">-</button>
-        <button onclick="addItem(40)">+</button>
+        <button onclick="addItem('เฟรนฟรายเขย่า M',40)">+</button>
       </div>
     </div>
 
@@ -85,7 +112,7 @@
       <span>ไก่ป๊อปเขย่า L 45฿</span>
       <div class="controls">
         <button onclick="removeItem(45)">-</button>
-        <button onclick="addItem(45)">+</button>
+        <button onclick="addItem('ไก่ป๊อปเขย่า L',45)">+</button>
       </div>
     </div>
 
@@ -93,33 +120,41 @@
       <span>ไก่ป๊อปเขย่า M 40฿</span>
       <div class="controls">
         <button onclick="removeItem(40)">-</button>
-        <button onclick="addItem(40)">+</button>
-      </div>
-    </div>
-
-    <div class="item">
-      <span>เฟรนฟราย + ไก่ป๊อป 45฿</span>
-      <div class="controls">
-        <button onclick="removeItem(45)">-</button>
-        <button onclick="addItem(45)">+</button>
+        <button onclick="addItem('ไก่ป๊อปเขย่า M',40)">+</button>
       </div>
     </div>
 
   </div>
 
   <div class="total">
-    💰 ยอดรวมทั้งหมด: <span id="totalPrice">0</span> บาท
+    💰 ยอดรวม: <span id="totalPrice">0</span> บาท
   </div>
+
+  <div class="payment">
+    <h3>วิธีชำระเงิน</h3>
+    <label>
+      <input type="radio" name="pay" value="เงินสด"> เงินสด
+    </label>
+    <label>
+      <input type="radio" name="pay" value="PromptPay"> PromptPay
+    </label>
+  </div>
+
+  <button class="order-btn" onclick="submitOrder()">📦 ส่งออเดอร์</button>
+
+  <div class="summary" id="summary"></div>
 
   <script>
     let total = 0;
+    let orders = [];
 
     function updateTotal() {
       document.getElementById("totalPrice").innerText = total;
     }
 
-    function addItem(price) {
+    function addItem(name, price) {
       total += price;
+      orders.push(name + " " + price + "฿");
       updateTotal();
     }
 
@@ -128,6 +163,30 @@
         total -= price;
         updateTotal();
       }
+    }
+
+    function submitOrder() {
+      let payment = document.querySelector('input[name="pay"]:checked');
+
+      if (orders.length === 0) {
+        alert("ยังไม่ได้เลือกเมนู");
+        return;
+      }
+
+      if (!payment) {
+        alert("กรุณาเลือกวิธีชำระเงิน");
+        return;
+      }
+
+      let summaryText = `
+        <h3>สรุปออเดอร์</h3>
+        <p>${orders.join("<br>")}</p>
+        <p><strong>รวม: ${total} บาท</strong></p>
+        <p>ชำระเงิน: ${payment.value}</p>
+      `;
+
+      document.getElementById("summary").innerHTML = summaryText;
+      document.getElementById("summary").style.display = "block";
     }
   </script>
 
