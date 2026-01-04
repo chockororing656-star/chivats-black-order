@@ -5,10 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ADMIN – CHIVATS BLACK</title>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <style>
 body{
   margin:0;
@@ -25,142 +21,99 @@ h1{
   color:#f5c16c;
   text-align:center;
 }
+input,button{
+  width:100%;
+  padding:12px;
+  font-size:16px;
+  margin-top:10px;
+}
+button{
+  background:#f5c16c;
+  border:none;
+  cursor:pointer;
+}
 .order{
   background:#1e1e1e;
   padding:15px;
   margin:15px 0;
   border-radius:8px;
 }
-.order.received{
+.received{
   opacity:0.6;
   border-left:5px solid #3cff8f;
 }
-.item{
-  font-size:14px;
-  margin-left:10px;
-}
-.total{
-  color:#f5c16c;
-  font-size:18px;
-}
-.time{
-  font-size:12px;
-  color:#aaa;
-}
-button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  font-size:16px;
-  border:none;
-  cursor:pointer;
-}
-.receive-btn{
-  background:#3cff8f;
-}
-.hidden{
-  display:none;
-}
+.hidden{display:none;}
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div class="container" id="loginBox">
   <h1>🔐 เข้าสู่ระบบแอดมิน</h1>
-  <input id="password" type="password" placeholder="ใส่รหัสผ่าน" style="width:100%;padding:10px;font-size:16px">
-  <button onclick="login()" style="margin-top:10px;background:#f5c16c;">เข้าใช้งาน</button>
+  <input id="password" type="password" placeholder="รหัสผ่าน">
+  <button onclick="login()">เข้าใช้งาน</button>
 </div>
 
+<!-- ADMIN -->
 <div class="container hidden" id="adminBox">
-  <h1>📋 ออเดอร์ทั้งหมด</h1>
-  <div id="orders"></div>
+  <h1>📋 ออเดอร์</h1>
+  <div id="orders">กำลังโหลด...</div>
 </div>
 
 <script>
-/* ================== ตั้งค่า ================== */
-const ADMIN_PASSWORD = "1234"; // 👈 เปลี่ยนรหัสตรงนี้ได้
+const ADMIN_PASSWORD = "1234";
 
-const TELEGRAM_TOKEN = "8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q";
-const TELEGRAM_CHAT_ID = "5665607150";
-
-/* ================= Firebase ================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
-  authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order",
-  storageBucket: "chivats-black-order.appspot.com",
-  messagingSenderId: "1012545451252",
-  appId: "1:1012545451252:web:0df1a74dc553f201bddaa1"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-/* ================= Login ================= */
 function login(){
   const pass = document.getElementById("password").value;
-  if(pass === ADMIN_PASSWORD){
-    document.getElementById("loginBox").classList.add("hidden");
-    document.getElementById("adminBox").classList.remove("hidden");
-    loadOrders();
-  }else{
+  if(pass !== ADMIN_PASSWORD){
     alert("❌ รหัสผ่านไม่ถูกต้อง");
+    return;
   }
+
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("adminBox").classList.remove("hidden");
+
+  loadFirebase(); // 🔥 โหลด Firebase หลัง login
 }
 
-/* ================= Load Orders ================= */
-function loadOrders(){
-  const ordersDiv = document.getElementById("orders");
+/* ===== Firebase โหลดหลัง login ===== */
+function loadFirebase(){
+  const s1 = document.createElement("script");
+  s1.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
+  s1.onload = ()=>{
+    const s2 = document.createElement("script");
+    s2.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js";
+    s2.onload = initFirebase;
+    document.body.appendChild(s2);
+  };
+  document.body.appendChild(s1);
+}
 
-  db.collection("orders")
-    .orderBy("time","desc")
-    .onSnapshot(snapshot=>{
-      ordersDiv.innerHTML = "";
-      snapshot.forEach(doc=>{
+function initFirebase(){
+  const firebaseConfig = {
+    apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
+    authDomain: "chivats-black-order.firebaseapp.com",
+    projectId: "chivats-black-order"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  db.collection("orders").orderBy("time","desc")
+    .onSnapshot(snap=>{
+      const box = document.getElementById("orders");
+      box.innerHTML = "";
+      snap.forEach(doc=>{
         const o = doc.data();
-        const received = o.status === "received";
-
-        let itemsHtml = "";
-        o.items.forEach(i=>{
-          itemsHtml += `<div class="item">• ${i.name} x ${i.qty}</div>`;
-        });
-
-        const time = o.time?.toDate
-          ? o.time.toDate().toLocaleString("th-TH")
-          : "";
-
-        ordersDiv.innerHTML += `
-          <div class="order ${received ? "received" : ""}">
-            <h3>👤 ${o.name} (${o.phone})</h3>
-            ${itemsHtml}
-            <p class="total">💰 ${o.total} บาท</p>
-            <p>💳 ${o.payment}</p>
-            <p class="time">⏰ ${time}</p>
-            ${
-              received
-              ? "<p>✅ รับออเดอร์แล้ว</p>"
-              : <button class="receive-btn" onclick="receiveOrder('${doc.id}','${o.name}')">✔ รับออเดอร์</button>
-            }
+        box.innerHTML += `
+          <div class="order ${o.status==="received"?"received":""}">
+            <b>${o.name}</b> (${o.phone})<br>
+            💰 ${o.total} บาท<br>
+            <small>${o.payment}</small>
           </div>
         `;
       });
     });
-}
-
-/* ================= Receive Order ================= */
-function receiveOrder(orderId,name){
-  db.collection("orders").doc(orderId).update({
-    status:"received"
-  });
-
-  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: ✅ รับออเดอร์แล้ว\n👤 ${name}
-    })
-  });
 }
 </script>
 
