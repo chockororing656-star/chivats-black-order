@@ -3,64 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <title>CHIVATS BLACK ORDER</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body {
   background:#111;
   color:#fff;
-  font-family:sans-serif;
+  font-family: Arial, sans-serif;
   padding:20px;
 }
 h1 { color:#f5c97a; }
+
 .menu-item {
   display:flex;
   justify-content:space-between;
   align-items:center;
   margin:10px 0;
 }
-.qty button {
+.qty-box {
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.qty-box button {
   width:30px;
   height:30px;
   font-size:18px;
 }
-.qty span {
-  display:inline-block;
-  width:30px;
-  text-align:center;
-}
 .total {
-  margin-top:20px;
-  font-size:20px;
-  color:#4cff9f;
+  margin:20px 0;
+  font-size:22px;
+  color:#5dff7a;
 }
+
 input {
   width:100%;
   padding:10px;
-  margin:8px 0;
+  margin-bottom:10px;
   font-size:16px;
 }
-button.submit {
+
+.payment-item {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.submit-btn {
   width:100%;
-  padding:15px;
+  padding:14px;
+  font-size:18px;
   background:#f5c97a;
   border:none;
-  font-size:18px;
-  margin-top:15px;
-}
-.alert {
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.85);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-.alert-box {
-  background:#222;
-  padding:30px;
-  border-radius:10px;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -74,112 +70,26 @@ button.submit {
 <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
 
 <h3>ข้อมูลลูกค้า</h3>
-<input id="name" placeholder="ชื่อลูกค้า">
-<input id="phone" placeholder="เบอร์โทร">
+<input id="customerName" placeholder="ชื่อผู้สั่ง">
+<input id="customerPhone" placeholder="เบอร์โทร">
 
 <h3>วิธีชำระเงิน</h3>
-<label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label><br>
-<label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
-
-<button class="submit" onclick="submitOrder()">📦 ส่งออเดอร์</button>
-
-<!-- แจ้งเตือน -->
-<div class="alert" id="alert">
-  <div class="alert-box">
-    <h2>✅ ออเดอร์เข้าแล้ว</h2>
-    <p>ร้านได้รับออเดอร์ของคุณเรียบร้อย</p>
-    <button onclick="location.reload()">ปิด</button>
-  </div>
+<div class="payment-item">
+  <input type="radio" name="payment" value="เงินสด" checked> เงินสด
 </div>
+<div class="payment-item">
+  <input type="radio" name="payment" value="PromptPay"> PromptPay
+</div>
+
+<button type="button" class="submit-btn" onclick="submitOrder()">📦 ส่งออเดอร์</button>
 
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* 🔥 ใส่ Firebase config ของคุณ */
 const firebaseConfig = {
-  apiKey: "ใส่ของคุณ",
-  authDomain: "ใส่ของคุณ",
-  projectId: "ใส่ของคุณ",
-  storageBucket: "ใส่ของคุณ",
-  messagingSenderId: "ใส่ของคุณ",
-  appId: "ใส่ของคุณ"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const items = [
-  {name:"เคบับไก่ L", price:69},
-  {name:"เคบับไก่ M", price:60},
-  {name:"เฟรนฟรายเขย่า L", price:45},
-  {name:"เฟรนฟรายเขย่า M", price:40},
-  {name:"ไก่ป๊อปเขย่า L", price:45},
-  {name:"ไก่ป๊อปเขย่า M", price:40}
-];
-
-const state = {};
-
-const menu = document.getElementById("menu");
-
-items.forEach((i,idx)=>{
-  state[idx]=0;
-  menu.innerHTML += `
-    <div class="menu-item">
-      <div>${i.name} ${i.price}฿</div>
-      <div class="qty">
-        <button onclick="change(${idx},-1)">-</button>
-        <span id="q${idx}">0</span>
-        <button onclick="change(${idx},1)">+</button>
-      </div>
-    </div>
-  `;
-});
-
-window.change = (i,v)=>{
-  state[i] = Math.max(0,state[i]+v);
-  document.getElementById("q"+i).innerText = state[i];
-  calc();
-}
-
-function calc(){
-  let sum=0;
-  items.forEach((i,idx)=> sum += i.price*state[idx]);
-  document.getElementById("total").innerText = sum;
-}
-
-window.submitOrder = async ()=>{
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  if(!name || !phone){
-    alert("กรุณากรอกชื่อและเบอร์โทร");
-    return;
-  }
-
-  const orderItems = items
-    .map((i,idx)=>({name:i.name, qty:state[idx], price:i.price}))
-    .filter(i=>i.qty>0);
-
-  if(orderItems.length===0){
-    alert("ยังไม่ได้เลือกเมนู");
-    return;
-  }
-
-  const pay = document.querySelector('input[name="pay"]:checked').value;
-  const total = Number(document.getElementById("total").innerText);
-
-  await addDoc(collection(db,"orders"),{
-    customerName:name,
-    customerPhone:phone,
-    items:orderItems,
-    total:total,
-    payment:pay,
-    createdAt:serverTimestamp()
-  });
-
-  document.getElementById("alert").style.display="flex";
-}
-</script>
-
-</body>
-</html>
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  project
