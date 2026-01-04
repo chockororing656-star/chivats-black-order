@@ -1,88 +1,99 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>CHIVATS BLACK ORDER</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #111;
-      color: #fff;
-      padding: 20px;
-    }
-    h2 { text-align: center; }
-    input, textarea, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
-    }
-    button {
-      background: #00c853;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:active {
-      background: #00a844;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>CHIVATS BLACK ORDER</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e1e;
+            color: #fff;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        input, textarea, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: none;
+        }
+        input, textarea {
+            background: #fff;
+            color: #000;
+        }
+        button {
+            background: #2ecc71;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #27ae60;
+        }
+    </style>
 </head>
+
 <body>
 
-<h2>🛒 สั่งออเดอร์ CHIVATS BLACK</h2>
+<h1>🛒 สั่งออเดอร์ CHIVATS BLACK</h1>
 
-<input id="name" placeholder="ชื่อลูกค้า">
-<input id="phone" placeholder="เบอร์โทร">
-<textarea id="order" placeholder="รายการอาหาร"></textarea>
+<input type="text" id="customerName" placeholder="ชื่อลูกค้า">
+<input type="text" id="customerPhone" placeholder="เบอร์โทร">
+<textarea id="orderDetail" rows="4" placeholder="รายละเอียดออเดอร์"></textarea>
 
 <button onclick="sendOrder()">สั่งออเดอร์</button>
 
 <script>
 function sendOrder() {
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
-  const order = document.getElementById("order").value;
+    const name = document.getElementById("customerName").value.trim();
+    const phone = document.getElementById("customerPhone").value.trim();
+    const detail = document.getElementById("orderDetail").value.trim();
 
-  if (!name || !order) {
-    alert("กรุณากรอกชื่อและรายการอาหาร");
-    return;
-  }
-
-  const text =
-`📦 ออเดอร์ใหม่
-👤 ชื่อ: ${name}
-📞 โทร: ${phone}
-🍔 รายการ:
-${order}`;
-
-  const token = "YOUR_BOT_TOKEN";
-  const chatId = "5665607150";
-
-  const url = `https://api.telegram.org/bot${token}/sendMessage`;
-
-  fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: text
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.ok) {
-      alert("✅ รับออเดอร์แล้วครับ");
-      document.getElementById("name").value = "";
-      document.getElementById("phone").value = "";
-      document.getElementById("order").value = "";
-    } else {
-      alert("❌ ส่งไม่สำเร็จ");
+    if (!name || !phone || !detail) {
+        alert("กรุณากรอกข้อมูลให้ครบ");
+        return;
     }
-  });
+
+    const BOT_TOKEN = "ใส่_BOT_TOKEN_ของคุณ";
+    const CHAT_ID = "ใส่_CHAT_ID_ของคุณ";
+
+    const message =
+`📦 ออเดอร์ใหม่ CHIVATS BLACK
+👤 ชื่อ: ${name}
+📞 เบอร์: ${phone}
+📝 รายการ:
+${detail}`;
+
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: message
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.ok) {
+            alert("✅ รับออเดอร์เรียบร้อย");
+            document.getElementById("customerName").value = "";
+            document.getElementById("customerPhone").value = "";
+            document.getElementById("orderDetail").value = "";
+        } else {
+            alert("❌ ส่งไม่สำเร็จ");
+            console.log(data);
+        }
+    })
+    .catch(err => {
+        alert("❌ เกิดข้อผิดพลาด");
+        console.error(err);
+    });
 }
 </script>
 
