@@ -88,21 +88,21 @@ input{
 </div>
 
 <script>
+/* ================= เมนู ================= */
 const menuData = [
-  { name: "เคบับไก่ ไซต์ L", price: 69 },
-  { name: "เคบับไก่ ไซต์ M", price: 60 },
+  { name: "เคบับไก่ L", price: 69 },
+  { name: "เคบับไก่ M", price: 60 },
   { name: "เฟรนฟรายเขย่า L", price: 45 },
   { name: "เฟรนฟรายเขย่า M", price: 40 },
   { name: "ไก่ป๊อปเขย่า L", price: 45 },
-  { name: "ไก่ป๊อปเขย่า M", price: 40 },
-  { name: "เฟรนฟราย + ไก่ป๊อป", price: 45 }
+  { name: "ไก่ป๊อปเขย่า M", price: 40 }
 ];
 
 const cart = {};
 const menuDiv = document.getElementById("menu");
 
-menuData.forEach((item,i)=>{
-  cart[i]=0;
+menuData.forEach((item, i) => {
+  cart[i] = 0;
   menuDiv.innerHTML += `
     <div class="menu-item">
       <div>${item.name} ${item.price}฿</div>
@@ -115,23 +115,60 @@ menuData.forEach((item,i)=>{
   `;
 });
 
-function changeQty(i,delta){
-  cart[i]=Math.max(0,cart[i]+delta);
-  document.getElementById("qty"+i).innerText=cart[i];
+function changeQty(i, delta) {
+  cart[i] = Math.max(0, cart[i] + delta);
+  document.getElementById("qty" + i).innerText = cart[i];
   calcTotal();
 }
 
-function calcTotal(){
-  let total=0;
-  menuData.forEach((item,i)=>{
-    total+=item.price*cart[i];
+function calcTotal() {
+  let total = 0;
+  menuData.forEach((item, i) => {
+    total += item.price * cart[i];
   });
-  document.getElementById("total").innerText=total;
+  document.getElementById("total").innerText = total;
 }
 
-function submitOrder(){
-  alert("✅ ระบบหน้าร้านพร้อมใช้งานแล้ว\n(เดี๋ยวเชื่อม Telegram ต่อ)");
+/* ================= ส่ง Telegram ================= */
+function submitOrder() {
+  const name = document.getElementById("customerName").value || "-";
+  const phone = document.getElementById("customerPhone").value || "-";
+  const payment = document.querySelector('input[name="pay"]:checked').value;
+
+  let text = "🧾 ออเดอร์ใหม่ CHIVATS BLACK\n\n";
+  text += `👤 ชื่อ: ${name}\n`;
+  text += `📞 เบอร์: ${phone}\n`;
+  text += `💳 ชำระเงิน: ${payment}\n\n`;
+  text += "🍽 รายการ:\n";
+
+  let total = 0;
+  menuData.forEach((item, i) => {
+    if (cart[i] > 0) {
+      text += `- ${item.name} x${cart[i]} = ${item.price * cart[i]}฿\n`;
+      total += item.price * cart[i];
+    }
+  });
+
+  if (total === 0) {
+    alert("กรุณาเลือกเมนู");
+    return;
+  }
+
+  text += `\n💰 รวมทั้งหมด: ${total} บาท`;
+
+  fetch("https://api.telegram.org/bot8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q/sendMessage", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: "5665607150",
+      text: text
+    })
+  });
+
+  alert("✅ ส่งออเดอร์เรียบร้อย");
+  location.reload();
 }
 </script>
 </body>
 </html>
+
