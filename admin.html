@@ -1,83 +1,99 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8" />
-  <title>ADMIN – CHIVATS BLACK ORDER</title>
+<script>
+/* ================= Firebase ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
+  authDomain: "chivats-black-order.firebaseapp.com",
+  projectId: "chivats-black-order",
+  storageBucket: "chivats-black-order.appspot.com",
+  messagingSenderId: "1012545451252",
+  appId: "1:1012545451252:web:0df1a74dc553f201bddaa1"
+};
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      orderBy,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
-      authDomain: "chivats-black-order.firebaseapp.com",
-      projectId: "chivats-black-order",
-      storageBucket: "chivats-black-order.appspot.com",
-      messagingSenderId: "1012545451252",
-      appId: "1:1012545451252:web:0df1a74dc553f201bddaa1"
-    };
+/* ================= เมนู (แก้ไขแล้ว) ================= */
+const menuData = [
+  { name: "เคบับไก่ ไซต์ L", price: 69 },
+  { name: "เคบับไก่ ไซต์ M", price: 60 },
+  { name: "เฟรนฟรายเขย่า L", price: 45 },
+  { name: "เฟรนฟรายเขย่า M", price: 40 },
+  { name: "ไก่ป๊อปเขย่า L", price: 45 },
+  { name: "ไก่ป๊อปเขย่า M", price: 40 },
+  { name: "เฟรนฟราย + ไก่ป๊อป", price: 45 }
+];
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const cart = {};
+const menuDiv = document.getElementById("menu");
 
-    const ordersRef = collection(db, "orders");
-    const q = query(ordersRef, orderBy("createdAt", "desc"));
+menuData.forEach((item, i) => {
+  cart[i] = 0;
+  menuDiv.innerHTML += `
+    <div class="menu-item">
+      <div>${item.name} ${item.price}฿</div>
+      <div class="qty-box">
+        <button onclick="changeQty(${i}, -1)">-</button>
+        <div class="qty" id="qty${i}">0</div>
+        <button onclick="changeQty(${i}, 1)">+</button>
+      </div>
+    </div>
+  `;
+});
 
-    onSnapshot(q, (snapshot) => {
-      const list = document.getElementById("orders");
-      list.innerHTML = "";
+function changeQty(i, delta) {
+  cart[i] = Math.max(0, cart[i] + delta);
+  document.getElementById("qty" + i).innerText = cart[i];
+  calcTotal();
+}
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
+function calcTotal() {
+  let total = 0;
+  menuData.forEach((item, i) => {
+    total += item.price * cart[i];
+  });
+  document.getElementById("total").innerText = total;
+}
 
-        let itemsHTML = "";
-        data.items.forEach(i => {
-          itemsHTML += `<li>${i.name} x ${i.qty} (${i.price}฿)</li>`;
-        });
+/* ================= ส่งออเดอร์ ================= */
+function submitOrder() {
+  const name = document.getElementById("customerName").value.trim();
+  const phone = document.getElementById("customerPhone").value.trim();
+  const payment = document.querySelector('input[name="pay"]:checked').value;
 
-        list.innerHTML += `
-          <div class="card">
-            <h3>👤 ${data.customerName}</h3>
-            <p>📞 ${data.phone}</p>
-            <p>💰 ${data.total} บาท</p>
-            <p>💳 ${data.payment}</p>
-            <ul>${itemsHTML}</ul>
-            <hr>
-          </div>
-        `;
-      });
+  if (!name || !phone) {
+    alert("กรุณากรอกชื่อและเบอร์โทร");
+    return;
+  }
 
-      // 🔔 แจ้งเตือนเมื่อมีออเดอร์ใหม่
-      if (snapshot.docChanges().some(c => c.type === "added")) {
-        new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play();
-      }
+  const items = [];
+  menuData.forEach((item, i) => {
+    if (cart[i] > 0) {
+      items.push({ name: item.name, price: item.price, qty: cart[i] });
+    }
+  });
+
+  if (items.length === 0) {
+    alert("กรุณาเลือกเมนู");
+    return;
+  }
+
+  const order = {
+    name,
+    phone,
+    payment,
+    items,
+    total: Number(document.getElementById("total").innerText),
+    time: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  db.collection("orders").add(order)
+    .then(() => {
+      alert("✅ ออเดอร์เข้าแล้ว ขอบคุณครับ");
+      location.reload();
+    })
+    .catch(err => {
+      alert("❌ ส่งออเดอร์ไม่สำเร็จ");
+      console.error(err);
     });
-  </script>
-
-  <style>
-    body {
-      background:#111;
-      color:#fff;
-      font-family:sans-serif;
-      padding:20px;
-    }
-    .card {
-      background:#1c1c1c;
-      padding:15px;
-      margin-bottom:15px;
-      border-radius:8px;
-    }
-  </style>
-</head>
-
-<body>
-  <h1>📋 ออเดอร์สด (Real-time)</h1>
-  <div id="orders"></div>
-</body>
-</html>
+}
+</script>
