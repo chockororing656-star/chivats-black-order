@@ -1,141 +1,69 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>CHIVATS BLACK - สั่งอาหาร</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #111;
-      color: #fff;
-      padding: 16px;
-    }
-    h1 {
-      color: #f5a623;
-      text-align: center;
-    }
-    .item {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-      border-bottom: 1px solid #333;
-      padding-bottom: 6px;
-    }
-    button {
-      padding: 4px 10px;
-      margin: 0 2px;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin: 6px 0;
-    }
-    .total {
-      font-size: 20px;
-      margin: 12px 0;
-      text-align: center;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>CHIVATS BLACK ORDER</title>
+<style>
+body {
+  background:#111;
+  color:#fff;
+  font-family:Arial;
+  padding:20px;
+}
+.item {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+}
+button {
+  width:40px;
+  height:40px;
+  font-size:20px;
+}
+.count {
+  margin:0 10px;
+  font-size:18px;
+}
+</style>
 </head>
 
 <body>
 
-<h1>CHIVATS BLACK</h1>
+<h2>เมนู</h2>
 
-<div id="menu"></div>
-
-<div class="total">
-  รวมทั้งหมด: <span id="total">0</span> บาท
+<div class="item">
+  <span>เคบับไก่ L 69฿</span>
+  <div>
+    <button onclick="minus(0)">-</button>
+    <span class="count" id="count0">0</span>
+    <button onclick="plus(0)">+</button>
+  </div>
 </div>
 
-<h3>ข้อมูลลูกค้า</h3>
-<input id="name" placeholder="ชื่อ">
-<input id="phone" placeholder="เบอร์โทร">
+<div class="item">
+  <span>เคบับไก่ M 60฿</span>
+  <div>
+    <button onclick="minus(1)">-</button>
+    <span class="count" id="count1">0</span>
+    <button onclick="plus(1)">+</button>
+  </div>
+</div>
 
-<h3>วิธีชำระเงิน</h3>
-<select id="payment">
-  <option value="cash">เงินสด</option>
-  <option value="promptpay">PromptPay</option>
-</select>
+<script>
+let counts = [0,0];
 
-<input id="slip" placeholder="ลิงก์สลิป (ถ้ามี)">
+function plus(i){
+  counts[i]++;
+  document.getElementById("count"+i).innerText = counts[i];
+}
 
-<button onclick="submitOrder()">ส่งออเดอร์</button>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  // 🔴 ใส่ Firebase ของคุณตรงนี้
-  const firebaseConfig = {
-    apiKey: "ใส่ของคุณ",
-    authDomain: "ใส่ของคุณ",
-    projectId: "ใส่ของคุณ"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const menu = [
-    ["เคบับไก่ L", 69],
-    ["เคบับไก่ M", 60],
-    ["เฟรนฟรายเขย่า L", 45],
-    ["เฟรนฟรายเขย่า M", 40],
-    ["ไก่ป๊อปเขย่า L", 45],
-    ["ไก่ป๊อปเขย่า M", 40],
-    ["เฟรนฟราย + ไก่ป๊อป", 45]
-  ];
-
-  let cart = {};
-  const menuDiv = document.getElementById("menu");
-  const totalSpan = document.getElementById("total");
-
-  menu.forEach((m, i) => {
-    cart[i] = 0;
-    const d = document.createElement("div");
-    d.className = "item";
-    d.innerHTML = `
-      ${m[0]} (${m[1]}฿)
-      <span>
-        <button onclick="cart[${i}]--; update()">-</button>
-        <span id="q${i}">0</span>
-        <button onclick="cart[${i}]++; update()">+</button>
-      </span>
-    `;
-    menuDiv.appendChild(d);
-  });
-
-  window.update = function () {
-    let t = 0;
-    menu.forEach((m, i) => {
-      if (cart[i] < 0) cart[i] = 0;
-      document.getElementById("q" + i).innerText = cart[i];
-      t += cart[i] * m[1];
-    });
-    totalSpan.innerText = t;
+function minus(i){
+  if(counts[i] > 0){
+    counts[i]--;
+    document.getElementById("count"+i).innerText = counts[i];
   }
-
-  window.submitOrder = async function () {
-    if (!name.value || !phone.value) {
-      alert("กรุณากรอกชื่อและเบอร์โทร");
-      return;
-    }
-
-    await addDoc(collection(db, "orders"), {
-      name: name.value,
-      phone: phone.value,
-      payment: payment.value,
-      slip: slip.value,
-      cart: cart,
-      total: Number(totalSpan.innerText),
-      createdAt: serverTimestamp()
-    });
-
-    alert("รับออเดอร์เรียบร้อยแล้ว 🙏");
-    location.reload();
-  }
+}
 </script>
 
 </body>
