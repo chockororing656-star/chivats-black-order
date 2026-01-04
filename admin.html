@@ -1,107 +1,50 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<title>ADMIN – CHIVATS BLACK</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<style>
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#111;
-  color:#fff;
-}
-.container{
-  max-width:700px;
-  margin:auto;
-  padding:20px;
-}
-h1{
-  color:#f5c16c;
-}
-.order{
-  border:1px solid #333;
-  padding:15px;
-  margin-bottom:15px;
-  border-radius:8px;
-}
-.accept{
-  background:#3cff8f;
-  border:none;
-  padding:10px;
-  font-size:16px;
-  cursor:pointer;
-}
-</style>
-</head>
-
-<body>
-<div class="container">
-  <h1>📦 ออเดอร์ทั้งหมด</h1>
-  <div id="orders">กำลังโหลด...</div>
-</div>
-
 <script>
-/* ===== Firebase config (ของคุณ) ===== */
-const firebaseConfig = {
-  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
-  authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order",
-  storageBucket: "chivats-black-order.appspot.com",
-  messagingSenderId: "1012545451252",
-  appId: "1:1012545451252:web:0df1a74dc553f201bddaa1"
-};
+function submitOrder(){
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+  const name = document.getElementById("customerName").value;
+  const phone = document.getElementById("customerPhone").value;
+  const payment = document.querySelector('input[name="pay"]:checked')?.value;
 
-const ordersDiv = document.getElementById("orders");
+  if(!name || !phone || !payment){
+    alert("กรอกข้อมูลให้ครบ");
+    return;
+  }
 
-/* ===== โหลดออเดอร์ ===== */
-db.collection("orders")
-  .onSnapshot(snapshot=>{
-    ordersDiv.innerHTML = "";
+  const items = [];
+  let total = 0;
 
-    if(snapshot.empty){
-      ordersDiv.innerHTML = "❌ ยังไม่มีออเดอร์";
-      return;
-    }
-
-    snapshot.forEach(doc=>{
-      const o = doc.data();
-
-      let itemsHTML = "";
-      o.items.forEach(i=>{
-        itemsHTML += `- ${i.name} x ${i.qty}<br>`;
+  menuData.forEach((item,i)=>{
+    if(cart[i] > 0){
+      items.push({
+        name: item.name,
+        qty: cart[i],
+        price: item.price
       });
-
-      ordersDiv.innerHTML += `
-        <div class="order">
-          <b>ชื่อ:</b> ${o.name}<br>
-          <b>เบอร์:</b> ${o.phone}<br><br>
-          <b>รายการ:</b><br>${itemsHTML}<br>
-          <b>ยอดรวม:</b> ${o.total} บาท<br>
-          <b>ชำระ:</b> ${o.payment}<br><br>
-          <button class="accept" onclick="acceptOrder('${doc.id}')">
-            ✅ รับออเดอร์
-          </button>
-        </div>
-      `;
-    });
+      total += item.price * cart[i];
+    }
   });
 
-/* ===== ปุ่มรับออเดอร์ ===== */
-function acceptOrder(id){
-  db.collection("orders").doc(id).update({
-    status: "accepted"
+  if(items.length === 0){
+    alert("ยังไม่ได้เลือกสินค้า");
+    return;
+  }
+
+  firebase.firestore().collection("orders").add({
+    name,
+    phone,
+    payment,
+    items,
+    total,
+    status: "new",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  })
+  .then(()=>{
+    alert("✅ ส่งออเดอร์เรียบร้อย");
+    location.reload();
+  })
+  .catch(err=>{
+    alert("❌ ส่งไม่สำเร็จ");
+    console.error(err);
   });
-  alert("รับออเดอร์แล้ว");
 }
 </script>
-</body>
-</html>
