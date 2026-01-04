@@ -4,54 +4,63 @@
 <meta charset="UTF-8">
 <title>CHIVATS BLACK ORDER</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body{
-    background:#111;
-    color:#f5d48a;
-    font-family:sans-serif;
-    padding:20px;
+body {
+  background:#111;
+  color:#fff;
+  font-family:sans-serif;
+  padding:20px;
 }
-h1{color:#f5d48a;}
-.menu-item{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin:10px 0;
+h1 { color:#f5c97a; }
+.menu-item {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:10px 0;
 }
-.qty-box button{
-    width:32px;
-    height:32px;
-    font-size:18px;
+.qty button {
+  width:30px;
+  height:30px;
+  font-size:18px;
 }
-.qty{
-    margin:0 10px;
-    color:#fff;
+.qty span {
+  display:inline-block;
+  width:30px;
+  text-align:center;
 }
-.total{
-    color:#6CFF8F;
-    font-size:22px;
-    margin-top:20px;
+.total {
+  margin-top:20px;
+  font-size:20px;
+  color:#4cff9f;
 }
-input{
-    width:100%;
-    padding:10px;
-    margin-top:8px;
-    margin-bottom:12px;
-    border-radius:5px;
-    border:none;
+input {
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  font-size:16px;
 }
-.payment{
-    margin-top:10px;
+button.submit {
+  width:100%;
+  padding:15px;
+  background:#f5c97a;
+  border:none;
+  font-size:18px;
+  margin-top:15px;
 }
-button.submit{
-    background:#f5d48a;
-    color:#000;
-    width:100%;
-    padding:15px;
-    font-size:20px;
-    border:none;
-    border-radius:8px;
-    margin-top:20px;
+.alert {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.alert-box {
+  background:#222;
+  padding:30px;
+  border-radius:10px;
 }
 </style>
 </head>
@@ -64,79 +73,111 @@ button.submit{
 
 <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
 
-<h2>ข้อมูลลูกค้า</h2>
-<input id="customerName" placeholder="ชื่อลูกค้า">
-<input id="customerPhone" placeholder="เบอร์โทรลูกค้า">
+<h3>ข้อมูลลูกค้า</h3>
+<input id="name" placeholder="ชื่อลูกค้า">
+<input id="phone" placeholder="เบอร์โทร">
 
-<h2>วิธีชำระเงิน</h2>
-<div class="payment">
-    <label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label><br>
-    <label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
-</div>
+<h3>วิธีชำระเงิน</h3>
+<label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label><br>
+<label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
 
 <button class="submit" onclick="submitOrder()">📦 ส่งออเดอร์</button>
 
-<script>
+<!-- แจ้งเตือน -->
+<div class="alert" id="alert">
+  <div class="alert-box">
+    <h2>✅ ออเดอร์เข้าแล้ว</h2>
+    <p>ร้านได้รับออเดอร์ของคุณเรียบร้อย</p>
+    <button onclick="location.reload()">ปิด</button>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "ใส่ของคุณ",
+  authDomain: "ใส่ของคุณ",
+  projectId: "ใส่ของคุณ",
+  storageBucket: "ใส่ของคุณ",
+  messagingSenderId: "ใส่ของคุณ",
+  appId: "ใส่ของคุณ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const items = [
- {name:"เคบับไก่ L", price:69},
- {name:"เคบับไก่ M", price:60},
- {name:"เฟรนฟรายเขย่า L", price:45},
- {name:"เฟรนฟรายเขย่า M", price:40},
- {name:"ไก่ป๊อปเขย่า L", price:45},
- {name:"ไก่ป๊อปเขย่า M", price:40},
+  {name:"เคบับไก่ L", price:69},
+  {name:"เคบับไก่ M", price:60},
+  {name:"เฟรนฟรายเขย่า L", price:45},
+  {name:"เฟรนฟรายเขย่า M", price:40},
+  {name:"ไก่ป๊อปเขย่า L", price:45},
+  {name:"ไก่ป๊อปเขย่า M", price:40}
 ];
 
-const cart = {};
+const state = {};
 
-const menuDiv = document.getElementById("menu");
+const menu = document.getElementById("menu");
 
-items.forEach((item,i)=>{
- cart[i]=0;
- menuDiv.innerHTML += `
-  <div class="menu-item">
-    <div>${item.name} ${item.price}฿</div>
-    <div class="qty-box">
-      <button onclick="changeQty(${i},-1)">-</button>
-      <span class="qty" id="qty-${i}">0</span>
-      <button onclick="changeQty(${i},1)">+</button>
+items.forEach((i,idx)=>{
+  state[idx]=0;
+  menu.innerHTML += `
+    <div class="menu-item">
+      <div>${i.name} ${i.price}฿</div>
+      <div class="qty">
+        <button onclick="change(${idx},-1)">-</button>
+        <span id="q${idx}">0</span>
+        <button onclick="change(${idx},1)">+</button>
+      </div>
     </div>
-  </div>`;
+  `;
 });
 
-function changeQty(i,val){
- cart[i]=Math.max(0,cart[i]+val);
- document.getElementById("qty-"+i).innerText=cart[i];
- calcTotal();
+window.change = (i,v)=>{
+  state[i] = Math.max(0,state[i]+v);
+  document.getElementById("q"+i).innerText = state[i];
+  calc();
 }
 
-function calcTotal(){
- let total=0;
- items.forEach((item,i)=>{
-  total+=cart[i]*item.price;
- });
- document.getElementById("total").innerText=total;
+function calc(){
+  let sum=0;
+  items.forEach((i,idx)=> sum += i.price*state[idx]);
+  document.getElementById("total").innerText = sum;
 }
 
-function submitOrder(){
- const name=document.getElementById("customerName").value;
- const phone=document.getElementById("customerPhone").value;
- const pay=document.querySelector("input[name='pay']:checked").value;
-
- if(!name || !phone){
-  alert("กรุณากรอกชื่อและเบอร์โทร");
-  return;
- }
-
- let order="📋 ออเดอร์ใหม่\n";
- order+=`👤 ชื่อ: ${name}\n📞 โทร: ${phone}\n💳 ชำระเงิน: ${pay}\n\n`;
- items.forEach((item,i)=>{
-  if(cart[i]>0){
-   order+=`${item.name} x ${cart[i]}\n`;
+window.submitOrder = async ()=>{
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  if(!name || !phone){
+    alert("กรุณากรอกชื่อและเบอร์โทร");
+    return;
   }
- });
- order+=`\n💰 รวม ${document.getElementById("total").innerText} บาท`;
 
- alert(order);
+  const orderItems = items
+    .map((i,idx)=>({name:i.name, qty:state[idx], price:i.price}))
+    .filter(i=>i.qty>0);
+
+  if(orderItems.length===0){
+    alert("ยังไม่ได้เลือกเมนู");
+    return;
+  }
+
+  const pay = document.querySelector('input[name="pay"]:checked').value;
+  const total = Number(document.getElementById("total").innerText);
+
+  await addDoc(collection(db,"orders"),{
+    customerName:name,
+    customerPhone:phone,
+    items:orderItems,
+    total:total,
+    payment:pay,
+    createdAt:serverTimestamp()
+  });
+
+  document.getElementById("alert").style.display="flex";
 }
 </script>
 
