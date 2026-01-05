@@ -9,9 +9,8 @@
 
 <style>
 body{margin:0;font-family:sans-serif;background:#111;color:#fff}
-.container{max-width:800px;margin:auto;padding:20px}
-.order{border:1px solid #444;padding:10px;margin:10px 0}
-.new{border-color:#3cff8f}
+.container{max-width:900px;margin:auto;padding:20px}
+.order{border:1px solid #444;padding:12px;margin:10px 0;border-radius:8px}
 </style>
 </head>
 
@@ -22,6 +21,7 @@ body{margin:0;font-family:sans-serif;background:#111;color:#fff}
 </div>
 
 <script>
+/* Firebase CONFIG (ตรงกับ index.html) */
 const firebaseConfig = {
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
   authDomain: "chivats-black-order.firebaseapp.com",
@@ -30,21 +30,31 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const ordersDiv=document.getElementById("orders");
 
+const ordersDiv = document.getElementById("orders");
+
+/* ❌ ไม่มี orderBy เพื่อไม่ให้พัง */
 db.collection("orders")
-.orderBy("time","desc")
-.onSnapshot(snap=>{
- ordersDiv.innerHTML="";
- snap.forEach(doc=>{
-  const o=doc.data();
-  ordersDiv.innerHTML+=`
-   <div class="order new">
-    <b>${o.name}</b> (${o.phone})<br>
-    ${o.items.map(i=>`${i.name} x ${i.qty}`).join("<br>")}
-    <hr>💰 ${o.total} บาท
-   </div>`;
- });
+.onSnapshot((snap)=>{
+  ordersDiv.innerHTML = "";
+
+  if(snap.empty){
+    ordersDiv.innerHTML = "ยังไม่มีออเดอร์";
+    return;
+  }
+
+  snap.forEach(doc=>{
+    const o = doc.data();
+    ordersDiv.innerHTML += `
+      <div class="order">
+        <b>${o.name}</b> (${o.phone})<br><br>
+        ${o.items.map(i=>`${i.name} x ${i.qty}`).join("<br>")}
+        <hr>
+        💰 ${o.total} บาท<br>
+        💳 ${o.payment}
+      </div>
+    `;
+  });
 });
 </script>
 </body>
