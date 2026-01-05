@@ -168,44 +168,69 @@ function submitOrder() {
   alert("✅ ส่งออเดอร์เรียบร้อย");
   location.reload();
 }
-</script>
-  <script>
-const TELEGRAM_TOKEN = "8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q";
-const CHAT_ID = "5665607150"; // ID ของเครื่องร้าน (จาก getUpdates)
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
+  authDomain: "chivats-black-order.firebaseapp.com",
+  projectId: "chivats-black-order"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 function submitOrder(){
   const name = document.getElementById("customerName").value;
   const phone = document.getElementById("customerPhone").value;
-  const payment = document.querySelector('input[name="pay"]:checked').value;
+  const payment = document.querySelector("input[name='pay']:checked")?.value;
 
-  let orderText = `🛒 ออเดอร์ใหม่ CHIVATS BLACK\n\n`;
+  if(!name || !phone || !payment){
+    alert("กรอกข้อมูลให้ครบ");
+    return;
+  }
+
+  const items = [];
   menuData.forEach((item,i)=>{
-    if(cart[i]>0){
-      orderText += `• ${item.name} x ${cart[i]} = ${item.price*cart[i]} บาท\n`;
+    if(cart[i] > 0){
+      items.push({
+        name: item.name,
+        price: item.price,
+        qty: cart[i]
+      });
     }
   });
 
-  orderText += `\n💰 ยอดรวม: ${document.getElementById("total").innerText} บาท`;
-  orderText += `\n👤 ชื่อ: ${name}`;
-  orderText += `\n📞 เบอร์: ${phone}`;
-  orderText += `\n💳 ชำระ: ${payment}`;
+  if(items.length === 0){
+    alert("ยังไม่ได้เลือกอาหาร");
+    return;
+  }
 
-  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      chat_id: CHAT_ID,
-      text: orderText
-    })
-  }).then(()=>{
-    alert("✅ ร้านได้รับออเดอร์แล้ว");
+  const total = items.reduce((s,i)=>s+(i.price*i.qty),0);
+
+  // 🔥 บันทึกเข้า Firestore
+  db.collection("orders").add({
+    name,
+    phone,
+    payment,
+    items,
+    total,
+    time: firebase.firestore.FieldValue.serverTimestamp(),
+    status: "new"
+  })
+  .then(()=>{
+    alert("✅ ส่งออเดอร์เรียบร้อย");
     location.reload();
-  }).catch(()=>{
-    alert("❌ ส่งออเดอร์ไม่สำเร็จ");
+  })
+  .catch(err=>{
+    alert("❌ บันทึกไม่สำเร็จ");
+    console.error(err);
   });
 }
 </script>
 </body>
 </html>
+
 
 
