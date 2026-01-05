@@ -1,57 +1,51 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>ADMIN - CHIVATS BLACK</title>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<style>
+body{margin:0;font-family:sans-serif;background:#111;color:#fff}
+.container{max-width:800px;margin:auto;padding:20px}
+.order{border:1px solid #444;padding:10px;margin:10px 0}
+.new{border-color:#3cff8f}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>📦 ออเดอร์ทั้งหมด</h1>
+<div id="orders">กำลังโหลด...</div>
+</div>
+
 <script>
-firebase.initializeApp({
+const firebaseConfig = {
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
   authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order",
-});
+  projectId: "chivats-black-order"
+};
 
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const ordersDiv=document.getElementById("orders");
 
-function submitOrder(){
-  const name = document.getElementById("customerName").value;
-  const phone = document.getElementById("customerPhone").value;
-  const payment = document.querySelector('input[name="pay"]:checked')?.value;
-
-  if(!name || !phone || !payment){
-    alert("กรุณากรอกข้อมูลให้ครบ");
-    return;
-  }
-
-  const items = [];
-  menuData.forEach((item,i)=>{
-    if(cart[i] > 0){
-      items.push({
-        name: item.name,
-        qty: cart[i],
-        price: item.price
-      });
-    }
-  });
-
-  if(items.length === 0){
-    alert("ยังไม่ได้เลือกสินค้า");
-    return;
-  }
-
-  const total = items.reduce((s,i)=>s+(i.qty*i.price),0);
-
-  db.collection("orders").add({
-    name,
-    phone,
-    payment,
-    items,
-    total,
-    status: "new",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>{
-    alert("✅ ส่งออเดอร์เรียบร้อย");
-    location.reload();
-  }).catch(err=>{
-    alert("❌ เกิดข้อผิดพลาด");
-    console.error(err);
-  });
-}
+db.collection("orders")
+.orderBy("time","desc")
+.onSnapshot(snap=>{
+ ordersDiv.innerHTML="";
+ snap.forEach(doc=>{
+  const o=doc.data();
+  ordersDiv.innerHTML+=`
+   <div class="order new">
+    <b>${o.name}</b> (${o.phone})<br>
+    ${o.items.map(i=>`${i.name} x ${i.qty}`).join("<br>")}
+    <hr>💰 ${o.total} บาท
+   </div>`;
+ });
+});
 </script>
+</body>
+</html>
