@@ -1,61 +1,143 @@
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>CHIVATS BLACK ORDER</title>
+
+<style>
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#111;
+  color:#fff;
+}
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:20px;
+}
+h1{
+  color:#f5c16c;
+}
+.menu-item{
+  background:#1e1e1e;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:8px;
+}
+.menu-item button{
+  padding:6px 10px;
+  font-size:16px;
+}
+.total{
+  color:#5cff5c;
+  font-size:20px;
+  margin:15px 0;
+}
+input{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+}
+.order-btn{
+  width:100%;
+  padding:15px;
+  font-size:18px;
+  background:#f5c16c;
+  border:none;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>🍢 CHIVATS BLACK</h1>
+
+<div class="total">
+💰 ยอดรวม: <span id="total">0</span> บาท
+</div>
+
+<h3>เมนูอาหาร</h3>
+<div id="menu"></div>
+
+<h3>ข้อมูลลูกค้า</h3>
+<input id="name" placeholder="ชื่อผู้สั่ง">
+<input id="phone" placeholder="เบอร์โทร">
+
+<h3>วิธีชำระเงิน</h3>
+<label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
+<label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
+
+<br><br>
+<button class="order-btn" onclick="submitOrder()">ส่งออเดอร์</button>
+
+</div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
-  authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order"
-};
+/* ===== เมนู ===== */
+const menuData = [
+  { name:"ไก่กรอบ", price:69 },
+  { name:"ไก่ซอส", price:79 },
+  { name:"เคบับไก่", price:89 }
+];
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+let cart = menuData.map(()=>0);
 
+const menuDiv = document.getElementById("menu");
+
+menuData.forEach((item,i)=>{
+  const div = document.createElement("div");
+  div.className = "menu-item";
+  div.innerHTML = `
+    <b>${item.name}</b> - ${item.price}฿<br><br>
+    <button onclick="changeQty(${i},-1)">-</button>
+    <span id="qty${i}"> 0 </span>
+    <button onclick="changeQty(${i},1)">+</button>
+  `;
+  menuDiv.appendChild(div);
+});
+
+function changeQty(i,delta){
+  cart[i] = Math.max(0, cart[i] + delta);
+  document.getElementById("qty"+i).innerText = cart[i];
+  calcTotal();
+}
+
+function calcTotal(){
+  let total = 0;
+  menuData.forEach((item,i)=>{
+    total += item.price * cart[i];
+  });
+  document.getElementById("total").innerText = total;
+}
+
+/* ===== ส่งออเดอร์ (ทดสอบก่อน ยังไม่ต่อ Firebase) ===== */
 function submitOrder(){
-  const name = document.getElementById("customerName").value;
-  const phone = document.getElementById("customerPhone").value;
-  const payment = document.querySelector("input[name='pay']:checked")?.value;
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const payment = document.querySelector("input[name=pay]:checked").value;
 
-  if(!name || !phone || !payment){
-    alert("กรอกข้อมูลให้ครบ");
+  if(!name || !phone){
+    alert("กรุณากรอกชื่อและเบอร์โทร");
     return;
   }
 
-  const items = [];
+  let text = "📦 ออเดอร์ใหม่\n\n";
   menuData.forEach((item,i)=>{
-    if(cart[i] > 0){
-      items.push({
-        name: item.name,
-        price: item.price,
-        qty: cart[i]
-      });
+    if(cart[i]>0){
+      text += `- ${item.name} x ${cart[i]}\n`;
     }
   });
+  text += `\n💰 รวม: ${document.getElementById("total").innerText} บาท`;
+  text += `\n👤 ${name}`;
+  text += `\n📞 ${phone}`;
+  text += `\n💳 ${payment}`;
 
-  if(items.length === 0){
-    alert("ยังไม่ได้เลือกอาหาร");
-    return;
-  }
-
-  const total = items.reduce((s,i)=>s+(i.price*i.qty),0);
-
-  // 🔥 บันทึกเข้า Firestore
-  db.collection("orders").add({
-    name,
-    phone,
-    payment,
-    items,
-    total,
-    time: firebase.firestore.FieldValue.serverTimestamp(),
-    status: "new"
-  })
-  .then(()=>{
-    alert("✅ ส่งออเดอร์เรียบร้อย");
-    location.reload();
-  })
-  .catch(err=>{
-    alert("❌ บันทึกไม่สำเร็จ");
-    console.error(err);
-  });
+  alert("✅ ส่งออเดอร์เรียบร้อย\n\n" + text);
 }
 </script>
+
+</body>
+</html>
