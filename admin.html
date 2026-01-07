@@ -3,62 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin – CHIVATS BLACK</title>
+<title>ADMIN - CHIVATS BLACK</title>
 
 <style>
-body{
-  margin:0;
-  background:#0f0f0f;
+body {
+  background:#111;
   color:#fff;
   font-family:sans-serif;
-}
-.container{
-  max-width:480px;
-  margin:auto;
   padding:16px;
 }
-h1{color:#f5b942}
-.order{
-  background:#1c1c1c;
-  padding:12px;
-  border-radius:10px;
+.order {
+  background:#1e1e1e;
+  padding:14px;
+  border-radius:12px;
   margin-bottom:12px;
 }
-.status{
-  padding:4px 10px;
-  border-radius:6px;
-  display:inline-block;
-  font-size:12px;
-}
-.new{background:#ff9800;color:#000}
-.done{background:#4caf50;color:#000}
-button{
+button {
+  padding:10px;
   margin-top:8px;
   width:100%;
-  padding:10px;
+  background:#f1c24a;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   font-weight:bold;
 }
-.accept{background:#f5b942}
-.finish{background:#4caf50}
 </style>
 </head>
 
 <body>
-<div class="container">
-<h1>📦 ออเดอร์ทั้งหมด – CHIVATS BLACK</h1>
+
+<h1>📦 ออเดอร์ทั้งหมด</h1>
 <div id="orders">กำลังโหลด...</div>
-</div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "ใส่ของคุณ",
-  authDomain: "ใส่ของคุณ",
-  projectId: "ใส่ของคุณ"
+  apiKey: "AIzaSyXXXX",
+  authDomain: "chivats-black-order.firebaseapp.com",
+  projectId: "chivats-black-order",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -66,55 +50,26 @@ const db = getFirestore(app);
 
 const ordersDiv = document.getElementById("orders");
 
-const q = query(
-  collection(db,"orders"),
-  orderBy("time","desc")
-);
+const q = query(collection(db,"orders"), orderBy("createdAt","desc"));
 
-onSnapshot(q,(snapshot)=>{
-  ordersDiv.innerHTML="";
-  if(snapshot.empty){
-    ordersDiv.innerHTML="ยังไม่มีออเดอร์";
-    return;
-  }
-
-  snapshot.forEach(docSnap=>{
-    const o = docSnap.data();
-    const id = docSnap.id;
-
+onSnapshot(q, snap => {
+  ordersDiv.innerHTML = "";
+  snap.forEach(doc => {
+    const o = doc.data();
     const div = document.createElement("div");
-    div.className="order";
-
-    const time = o.time?.toDate().toLocaleString("th-TH") || "-";
-
+    div.className = "order";
     div.innerHTML = `
       <b>👤 ${o.name}</b><br>
       📞 ${o.phone}<br>
-      🕒 ${time}<br>
-      <hr>
-      ${o.items.map(i=>`• ${i.name} x${i.qty}`).join("<br>")}
-      <hr>
-      💰 <b>${o.total} บาท</b><br>
-      <span class="status ${o.status==="done"?"done":"new"}">
-        ${o.status==="done"?"เสร็จแล้ว":"รอรับออเดอร์"}
-      </span>
-
-      ${o.status!=="done" ? `
-        <button class="accept" onclick="acceptOrder('${id}')">รับออเดอร์</button>
-        <button class="finish" onclick="finishOrder('${id}')">ทำเสร็จแล้ว</button>
-      ` : ``}
+      💳 ${o.payment}<br>
+      💰 ${o.total} บาท<br>
+      🕒 ${o.createdAt?.toDate().toLocaleString("th-TH") || ""}<br><br>
+      ${o.items.map(i => `• ${i.name} ${i.price}฿`).join("<br>")}
     `;
     ordersDiv.appendChild(div);
   });
 });
-
-window.acceptOrder = async (id)=>{
-  await updateDoc(doc(db,"orders",id),{status:"accepted"});
-};
-
-window.finishOrder = async (id)=>{
-  await updateDoc(doc(db,"orders",id),{status:"done"});
-};
 </script>
+
 </body>
 </html>
