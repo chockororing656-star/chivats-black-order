@@ -34,7 +34,7 @@ h1{color:#f5b942;text-align:center}
   border-radius:12px;
   margin-top:16px;
 }
-input{
+input,textarea{
   width:100%;
   padding:12px;
   border-radius:8px;
@@ -51,15 +51,19 @@ input{
   font-size:18px;
   font-weight:bold;
 }
-.submit:disabled{
-  opacity:.4;
-}
 .remove{
   float:right;
   background:red;
   border:none;
   border-radius:6px;
   color:#fff;
+}
+.radio{
+  margin-bottom:8px;
+}
+.qr{
+  text-align:center;
+  margin-top:10px;
 }
 </style>
 </head>
@@ -88,7 +92,23 @@ input{
 <h3>ข้อมูลลูกค้า</h3>
 <input id="name" placeholder="ชื่อผู้สั่ง">
 <input id="phone" placeholder="เบอร์โทร">
-<button class="submit" id="submit" onclick="sendOrder()">ส่งออเดอร์</button>
+
+<h3>วิธีชำระเงิน</h3>
+<div class="radio">
+<input type="radio" name="pay" value="เงินสด" checked onchange="toggleQR()"> เงินสด
+</div>
+<div class="radio">
+<input type="radio" name="pay" value="PromptPay" onchange="toggleQR()"> PromptPay
+</div>
+
+<div id="qrBox" class="qr" style="display:none">
+<img src="https://promptpay.io/66967636910.png" width="220">
+<p>สแกนเพื่อชำระเงิน</p>
+</div>
+
+<textarea id="note" placeholder="โน้ตถึงร้าน (ไม่เผ็ด / รับเอง ฯลฯ)"></textarea>
+
+<button class="submit" onclick="sendOrder()">ส่งออเดอร์</button>
 </div>
 </div>
 
@@ -97,9 +117,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "ของคุณ",
-  authDomain: "ของคุณ",
-  projectId: "ของคุณ"
+  apiKey: "AIzaSyXXXX",
+  authDomain: "chivats-black-order.firebaseapp.com",
+  projectId: "chivats-black-order",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -108,14 +128,9 @@ const db = getFirestore(app);
 let cart=[];
 
 window.addItem=(name,price)=>{
-  const f = cart.find(i=>i.name===name);
+  const f=cart.find(i=>i.name===name);
   if(f) f.qty++;
   else cart.push({name,price,qty:1});
-  render();
-}
-
-window.removeItem=(i)=>{
-  cart.splice(i,1);
   render();
 }
 
@@ -125,27 +140,36 @@ function render(){
   list.innerHTML="";
   cart.forEach((i,idx)=>{
     total+=i.price*i.qty;
-    list.innerHTML+=`
-      <div>
-        ${i.name} x${i.qty}
-        <button class="remove" onclick="removeItem(${idx})">X</button>
-      </div>`;
+    list.innerHTML+=`${i.name} x${i.qty}
+      <button class="remove" onclick="removeItem(${idx})">X</button><br>`;
   });
   document.getElementById("total").innerText=total;
 }
 
+window.removeItem=i=>{
+  cart.splice(i,1);
+  render();
+}
+
+window.toggleQR=()=>{
+  const pay=document.querySelector("input[name=pay]:checked").value;
+  document.getElementById("qrBox").style.display =
+    pay==="PromptPay"?"block":"none";
+}
+
 window.sendOrder=async()=>{
-  const name=document.getElementById("name").value.trim();
-  const phone=document.getElementById("phone").value.trim();
+  const name=nameInput.value.trim();
+  const phone=phoneInput.value.trim();
+  const pay=document.querySelector("input[name=pay]:checked").value;
+  const note=document.getElementById("note").value;
+
   if(!name||!phone||cart.length===0){
-    alert("กรอกข้อมูลและเลือกเมนู");
+    alert("กรอกข้อมูลให้ครบและเลือกเมนู");
     return;
   }
 
-  document.getElementById("submit").disabled=true;
-
   await addDoc(collection(db,"orders"),{
-    name,phone,
+    name,phone,payment:pay,note,
     items:cart,
     total:cart.reduce((s,i)=>s+i.price*i.qty,0),
     status:"new",
