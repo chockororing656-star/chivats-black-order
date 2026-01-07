@@ -1,95 +1,105 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <title>ADMIN – CHIVATS BLACK</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ออเดอร์ทั้งหมด - CHIVATS BLACK</title>
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      orderBy,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    // 🔴 ใส่ config เดิมของคุณ (ตัวนี้ต้องตรงกับหน้า index)
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "XXXX",
-      appId: "XXXX"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const orderList = document.getElementById("orders");
-
-    const q = query(
-      collection(db, "orders"),
-      orderBy("time", "desc")
-    );
-
-    onSnapshot(q, (snapshot) => {
-      orderList.innerHTML = "";
-      snapshot.forEach(doc => {
-        const d = doc.data();
-
-        const date = d.time?.toDate();
-        const dateText = date
-          ? date.toLocaleDateString("th-TH") + " " + date.toLocaleTimeString("th-TH")
-          : "-";
-
-        let itemsHtml = "";
-        d.items.forEach(i => {
-          itemsHtml += `<li>${i.name} x ${i.qty} = ${i.price * i.qty}฿</li>`;
-        });
-
-        orderList.innerHTML += `
-          <div class="card">
-            <h3>🧾 ออเดอร์ใหม่</h3>
-            <p><b>📅 วันที่/เวลา:</b> ${dateText}</p>
-            <p><b>👤 ชื่อ:</b> ${d.name}</p>
-            <p><b>📞 เบอร์โทร:</b> ${d.phone}</p>
-            <p><b>💳 ชำระเงิน:</b> ${d.payment}</p>
-            <ul>${itemsHtml}</ul>
-            <h4>💰 รวม: ${d.total} บาท</h4>
-          </div>
-        `;
-      });
-    });
-  </script>
-
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #111;
-      color: #fff;
-      padding: 20px;
-    }
-    h1 {
-      color: #f5c16c;
-    }
-    .card {
-      background: #1e1e1e;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 10px;
-      border-left: 5px solid #f5c16c;
-    }
-    ul {
-      margin-left: 20px;
-    }
-  </style>
+<style>
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    background: #111;
+    color: #fff;
+    padding: 16px;
+  }
+  h1 {
+    color: #f5c16c;
+    margin-bottom: 16px;
+  }
+  .card {
+    background: #1e1e1e;
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    border-left: 4px solid #f5c16c;
+  }
+  ul {
+    padding-left: 18px;
+  }
+</style>
 </head>
 
 <body>
-  <h1>📦 ออเดอร์ทั้งหมด – CHIVATS BLACK</h1>
-  <div id="orders">กำลังโหลด...</div>
+
+<h1>📦 ออเดอร์ทั้งหมด – CHIVATS BLACK</h1>
+<div id="orders">กำลังโหลดออเดอร์...</div>
+
+<!-- 🔥 Firebase (ต้องอยู่ล่างสุดแบบนี้) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    orderBy,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // 🔴 ใส่ CONFIG จริงของคุณตรงนี้
+  const firebaseConfig = {
+    apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
+    authDomain: "chivats-black-order.firebaseapp.com",
+    projectId: "chivats-black-order",
+    storageBucket: "chivats-black-order.appspot.com",
+    messagingSenderId: "1012545451252",
+    appId: "1:1012545451252:web:0df1a74dc553f201bddaa1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const orderList = document.getElementById("orders");
+
+  const q = query(
+    collection(db, "orders"),
+    orderBy("time", "desc")
+  );
+
+  onSnapshot(q, (snapshot) => {
+    orderList.innerHTML = "";
+
+    if (snapshot.empty) {
+      orderList.innerHTML = "❌ ยังไม่มีออเดอร์";
+      return;
+    }
+
+    snapshot.forEach(doc => {
+      const d = doc.data();
+
+      const date = d.time?.toDate();
+      const dateText = date
+        ? date.toLocaleDateString("th-TH") + " " + date.toLocaleTimeString("th-TH")
+        : "-";
+
+      let itemsHtml = "";
+      d.items.forEach(i => {
+        itemsHtml += `<li>${i.name} x ${i.qty} = ${i.price * i.qty}฿</li>`;
+      });
+
+      orderList.innerHTML += `
+        <div class="card">
+          <p><b>📅 วันที่/เวลา:</b> ${dateText}</p>
+          <p><b>👤 ชื่อ:</b> ${d.name}</p>
+          <p><b>📞 เบอร์โทร:</b> ${d.phone}</p>
+          <p><b>💳 ชำระเงิน:</b> ${d.payment}</p>
+          <ul>${itemsHtml}</ul>
+          <b>💰 รวม ${d.total} บาท</b>
+        </div>
+      `;
+    });
+  });
+</script>
+
 </body>
 </html>
