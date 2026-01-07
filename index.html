@@ -1,173 +1,160 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CHIVATS BLACK ORDER</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHIVATS BLACK</title>
 
 <style>
 body{
   margin:0;
-  font-family:sans-serif;
   background:#0f0f0f;
+  font-family:sans-serif;
   color:#fff;
 }
 .container{
-  max-width:420px;
+  max-width:480px;
   margin:auto;
   padding:16px;
 }
-h1{color:#f5b942}
+h1{color:#f5b942;text-align:center}
 .menu button{
   width:100%;
-  margin:6px 0;
   padding:14px;
-  background:#f5b942;
+  margin-bottom:10px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
+  background:#f5b942;
   font-size:16px;
   font-weight:bold;
 }
-.cart{
+.card{
   background:#1c1c1c;
   padding:12px;
-  border-radius:10px;
-  margin-top:10px;
-}
-.cart-item{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:6px;
+  border-radius:12px;
+  margin-top:16px;
 }
 input{
   width:100%;
   padding:12px;
   border-radius:8px;
   border:none;
-  margin:6px 0;
+  margin-bottom:10px;
+  font-size:16px;
 }
 .submit{
-  background:#f5b942;
-  color:#000;
-  font-weight:bold;
-  border:none;
-  padding:14px;
   width:100%;
-  border-radius:10px;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:#f5b942;
   font-size:18px;
+  font-weight:bold;
+}
+.submit:disabled{
+  opacity:.4;
+}
+.remove{
+  float:right;
+  background:red;
+  border:none;
+  border-radius:6px;
+  color:#fff;
 }
 </style>
 </head>
 
 <body>
 <div class="container">
-
 <h1>🍢 CHIVATS BLACK</h1>
 
-<div class="menu" id="menu"></div>
-
-<div class="cart">
-  <h3>🧾 รายการที่เลือก</h3>
-  <div id="cart"></div>
-  <h3>💰 ยอดรวม: <span id="total">0</span> บาท</h3>
+<div class="menu">
+<button onclick="addItem('เคบับไก่ L',69)">เคบับไก่ L +69</button>
+<button onclick="addItem('เคบับไก่ M',60)">เคบับไก่ M +60</button>
+<button onclick="addItem('เฟรนฟรายเขย่า L',45)">เฟรนฟรายเขย่า L +45</button>
+<button onclick="addItem('เฟรนฟรายเขย่า M',40)">เฟรนฟรายเขย่า M +40</button>
+<button onclick="addItem('ไก่ป๊อปเขย่า L',45)">ไก่ป๊อปเขย่า L +45</button>
+<button onclick="addItem('ไก่ป๊อปเขย่า M',40)">ไก่ป๊อปเขย่า M +40</button>
+<button onclick="addItem('เฟรนฟราย + ไก่ป๊อป',45)">เฟรนฟราย + ไก่ป๊อป +45</button>
 </div>
 
+<div class="card">
+<h3>🧾 รายการที่เลือก</h3>
+<div id="list"></div>
+<p>💰 ยอดรวม: <b id="total">0</b> บาท</p>
+</div>
+
+<div class="card">
 <h3>ข้อมูลลูกค้า</h3>
 <input id="name" placeholder="ชื่อผู้สั่ง">
 <input id="phone" placeholder="เบอร์โทร">
-
-<button class="submit" onclick="submitOrder()">ส่งออเดอร์</button>
-
+<button class="submit" id="submit" onclick="sendOrder()">ส่งออเดอร์</button>
+</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "ใส่ของคุณ",
-  authDomain: "ใส่ของคุณ",
-  projectId: "ใส่ของคุณ"
+  apiKey: "ของคุณ",
+  authDomain: "ของคุณ",
+  projectId: "ของคุณ"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const menuData = [
-  {name:"เคบับไก่ L", price:69},
-  {name:"เคบับไก่ M", price:60},
-  {name:"เฟรนฟรายเขย่า L", price:45},
-  {name:"เฟรนฟรายเขย่า M", price:40},
-  {name:"ไก่ป๊อปเขย่า L", price:45},
-  {name:"ไก่ป๊อปเขย่า M", price:40},
-  {name:"เฟรนฟราย + ไก่ป๊อป", price:45},
-];
+let cart=[];
 
-let cart = [];
-
-const menuDiv = document.getElementById("menu");
-const cartDiv = document.getElementById("cart");
-const totalSpan = document.getElementById("total");
-
-menuData.forEach(item=>{
-  const btn = document.createElement("button");
-  btn.textContent = `${item.name} +${item.price}`;
-  btn.onclick = ()=>addItem(item);
-  menuDiv.appendChild(btn);
-});
-
-function addItem(item){
-  const found = cart.find(i=>i.name===item.name);
-  if(found){
-    found.qty++;
-  }else{
-    cart.push({...item, qty:1});
-  }
-  renderCart();
+window.addItem=(name,price)=>{
+  const f = cart.find(i=>i.name===name);
+  if(f) f.qty++;
+  else cart.push({name,price,qty:1});
+  render();
 }
 
-function renderCart(){
-  cartDiv.innerHTML="";
-  let total=0;
-  cart.forEach((item,index)=>{
-    total += item.price*item.qty;
-    const div = document.createElement("div");
-    div.className="cart-item";
-    div.innerHTML = `
-      ${item.name} x${item.qty}
-      <button onclick="removeItem(${index})">❌</button>
-    `;
-    cartDiv.appendChild(div);
-  });
-  totalSpan.textContent = total;
-}
-
-window.removeItem = (i)=>{
+window.removeItem=(i)=>{
   cart.splice(i,1);
-  renderCart();
+  render();
 }
 
-window.submitOrder = async ()=>{
-  if(cart.length===0) return alert("ยังไม่ได้เลือกเมนู");
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
+function render(){
+  const list=document.getElementById("list");
+  let total=0;
+  list.innerHTML="";
+  cart.forEach((i,idx)=>{
+    total+=i.price*i.qty;
+    list.innerHTML+=`
+      <div>
+        ${i.name} x${i.qty}
+        <button class="remove" onclick="removeItem(${idx})">X</button>
+      </div>`;
+  });
+  document.getElementById("total").innerText=total;
+}
+
+window.sendOrder=async()=>{
+  const name=document.getElementById("name").value.trim();
+  const phone=document.getElementById("phone").value.trim();
+  if(!name||!phone||cart.length===0){
+    alert("กรอกข้อมูลและเลือกเมนู");
+    return;
+  }
+
+  document.getElementById("submit").disabled=true;
 
   await addDoc(collection(db,"orders"),{
-    name,
-    phone,
+    name,phone,
     items:cart,
-    total:Number(totalSpan.textContent),
-    time:serverTimestamp(),
-    status:"new"
+    total:cart.reduce((s,i)=>s+i.price*i.qty,0),
+    status:"new",
+    time:serverTimestamp()
   });
 
-  fetch(`https://api.callmebot.com/text.php?user=YOUR_CHAT_ID&text=🛎️ ออเดอร์ใหม่ ${name} ${phone} ยอด ${totalSpan.textContent} บาท`);
-
   alert("ส่งออเดอร์เรียบร้อย");
-  cart=[];
-  renderCart();
-};
+  location.reload();
+}
 </script>
-
 </body>
 </html>
