@@ -6,195 +6,166 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{
-  margin:0;
-  font-family:sans-serif;
   background:#111;
   color:#fff;
-}
-.container{
-  max-width:480px;
-  margin:auto;
+  font-family:sans-serif;
   padding:20px;
 }
-h1{
-  color:#f5b301;
-  text-align:center;
-}
-.menu-item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin:10px 0;
+h1{color:#f5b301}
+.card{
+  background:#1c1c1c;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:15px;
 }
 button{
-  padding:6px 12px;
+  width:100%;
+  padding:12px;
   background:#f5b301;
   border:none;
-  border-radius:6px;
-  font-weight:bold;
+  border-radius:8px;
+  font-size:16px;
 }
 input{
   width:100%;
   padding:10px;
-  margin:8px 0;
+  margin-bottom:10px;
+  border-radius:6px;
+  border:none;
 }
-.total{
-  color:#00ff88;
-  font-size:20px;
-}
-.submit{
-  width:100%;
-  padding:14px;
-  font-size:18px;
-  margin-top:10px;
+.menu-item{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
 }
 </style>
 </head>
+
 <body>
 
-<div class="container">
 <h1>🍢 CHIVATS BLACK</h1>
 
-<div id="menu"></div>
+<div class="card">
+<h3>เมนูอาหาร</h3>
 
-<p class="total">💰 ยอดรวม: <span id="total">0</span> บาท</p>
+<div class="menu-item">
+<span>เคบับไก่ L</span>
+<button onclick="addItem('เคบับไก่ L',69)">+ 69</button>
+</div>
 
+<div class="menu-item">
+<span>เคบับไก่ M</span>
+<button onclick="addItem('เคบับไก่ M',60)">+ 60</button>
+</div>
+
+<div class="menu-item">
+<span>เฟรนฟรายเขย่า L</span>
+<button onclick="addItem('เฟรนฟรายเขย่า L',45)">+ 45</button>
+</div>
+
+<div class="menu-item">
+<span>เฟรนฟรายเขย่า M</span>
+<button onclick="addItem('เฟรนฟรายเขย่า M',40)">+ 40</button>
+</div>
+
+<div class="menu-item">
+<span>ไก่ป๊อปเขย่า L</span>
+<button onclick="addItem('ไก่ป๊อปเขย่า L',45)">+ 45</button>
+</div>
+
+<div class="menu-item">
+<span>ไก่ป๊อปเขย่า M</span>
+<button onclick="addItem('ไก่ป๊อปเขย่า M',40)">+ 40</button>
+</div>
+
+<div class="menu-item">
+<span>เฟรนฟราย + ไก่ป๊อป</span>
+<button onclick="addItem('เฟรนฟราย + ไก่ป๊อป',45)">+ 45</button>
+</div>
+</div>
+
+<div class="card">
 <h3>ข้อมูลลูกค้า</h3>
 <input id="name" placeholder="ชื่อผู้สั่ง">
 <input id="phone" placeholder="เบอร์โทร">
-
-<h3>วิธีชำระเงิน</h3>
-<label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
-<label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
-
-<button class="submit" onclick="submitOrder()">ส่งออเดอร์</button>
+<p>ยอดรวม: <span id="total">0</span> บาท</p>
+<button onclick="submitOrder()">ส่งออเดอร์</button>
 </div>
 
 <!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
-  authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order",
-  storageBucket: "chivats-black-order.appspot.com",
-  messagingSenderId: "1012545451252",
-  appId: "1:1012545451252:web:0df1a74dc553f201bddaa1"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// ===== TELEGRAM =====
-const TELEGRAM_TOKEN = "8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q";
-const CHAT_ID = "5665607150";
-
-// ===== MENU =====
-const menuData = [
- {name:"เคบับไก่ L", price:69},
- {name:"เคบับไก่ M", price:60},
- {name:"เฟรนฟรายเขย่า L", price:45},
- {name:"เฟรนฟรายเขย่า M", price:40},
- {name:"ไก่ป๊อปเขย่า L", price:45},
- {name:"ไก่ป๊อปเขย่า M", price:40},
- {name:"เฟรนฟราย+ไก่ป๊อป", price:45},
-];
-
-let cart = [];
-
-const menuDiv = document.getElementById("menu");
-menuData.forEach((m,i)=>{
-  cart[i]=0;
-  menuDiv.innerHTML += `
-    <div class="menu-item">
-      <span>${m.name} - ${m.price}฿</span>
-      <div>
-        <button onclick="add(${i})">+</button>
-        <span id="q${i}">0</span>
-        <button onclick="remove(${i})">-</button>
-      </div>
-    </div>
-  `;
+<script>
+/* ================= FIREBASE CONFIG ================= */
+firebase.initializeApp({
+  apiKey: "ใส่_API_KEY",
+  authDomain: "ใส่_AUTH_DOMAIN",
+  projectId: "ใส่_PROJECT_ID"
 });
+const db = firebase.firestore();
 
-window.add = i => {
-  cart[i]++;
-  document.getElementById("q"+i).innerText = cart[i];
-  updateTotal();
-}
-window.remove = i => {
-  if(cart[i]>0) cart[i]--;
-  document.getElementById("q"+i).innerText = cart[i];
-  updateTotal();
-}
+/* ================= TELEGRAM CONFIG ================= */
+const TELEGRAM_TOKEN = "ใส่_TOKEN_เดิม";
+const CHAT_ID = "ใส่_CHAT_ID";
 
-function updateTotal(){
-  let t=0;
-  cart.forEach((q,i)=> t+=q*menuData[i].price);
-  document.getElementById("total").innerText=t;
+/* ================= DATA ================= */
+let cart = [];
+let total = 0;
+
+function addItem(name, price){
+  cart.push({name, price, qty:1});
+  total += price;
+  document.getElementById("total").innerText = total;
 }
 
-window.submitOrder = async ()=>{
+/* ================= SEND TELEGRAM ================= */
+function sendTelegram(msg){
+  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      chat_id: CHAT_ID,
+      text: msg
+    })
+  });
+}
+
+/* ================= SUBMIT ORDER ================= */
+function submitOrder(){
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
-  const payment = document.querySelector("input[name=pay]:checked").value;
+  const time = new Date().toLocaleString("th-TH");
 
-  if(!name || !phone){
-    alert("กรุณากรอกชื่อและเบอร์");
+  if(!name || !phone || cart.length===0){
+    alert("กรอกข้อมูลให้ครบ");
     return;
   }
 
-  const items = cart.map((q,i)=> q>0 ? {
-    name:menuData[i].name,
-    qty:q,
-    price:menuData[i].price
-  }:null).filter(Boolean);
-
-  if(items.length===0){
-    alert("ยังไม่ได้เลือกเมนู");
-    return;
-  }
-
-  const total = items.reduce((s,i)=>s+i.qty*i.price,0);
-
-  const order = {
+  db.collection("orders").add({
     name,
     phone,
-    payment,
-    items,
+    items: cart,
     total,
-    time:new Date().toISOString(),
-    createdAt:serverTimestamp(),
-    status:"รอรับออเดอร์"
-  };
+    status: "ใหม่",
+    time
+  });
 
-  await addDoc(collection(db,"orders"),order);
+  let detail = cart.map(i=>`- ${i.name} (${i.price})`).join("\n");
 
-  sendTelegram(order);
+  sendTelegram(
+`🛒 ออเดอร์ใหม่
+👤 ${name}
+📞 ${phone}
+⏰ ${time}
+
+${detail}
+
+💰 รวม ${total} บาท`
+  );
 
   alert("ส่งออเดอร์เรียบร้อย");
   location.reload();
-}
-
-// ===== TELEGRAM SEND =====
-function sendTelegram(o){
-  const text =
-`📦 ออเดอร์ใหม่ - CHIVATS BLACK
-🕒 ${new Date(o.time).toLocaleString("th-TH")}
-👤 ${o.name}
-📞 ${o.phone}
-💳 ${o.payment}
-
-🍗 ${o.items.map(i=>`${i.name} x${i.qty}`).join("\n")}
-💰 รวม ${o.total} บาท`;
-
-  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ chat_id:CHAT_ID, text })
-  });
 }
 </script>
 
