@@ -2,137 +2,73 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>CHIVATS BLACK ORDER</title>
+<title>ADMIN – CHIVATS BLACK</title>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  background:#111;
-  color:#fff;
-  font-family:sans-serif;
-}
-.container{max-width:420px;margin:auto}
-.item{display:flex;justify-content:space-between;margin:8px 0}
-.qty button{width:30px}
-input,button{width:100%;padding:10px;margin:6px 0}
-button{background:#f5c16c;border:none;font-size:16px}
+body{background:#111;color:#fff;font-family:sans-serif}
+.card{border:1px solid #444;padding:10px;margin:10px}
+.new{border-left:5px solid red}
+.doing{border-left:5px solid orange}
+.done{border-left:5px solid green}
+button{margin:5px;padding:5px}
+.timer{color:#f5c16c;font-weight:bold}
 </style>
 </head>
 
 <body>
-<div class="container">
-
-<h2>🥙 CHIVATS BLACK</h2>
-<p>💰 ยอดรวม: <span id="total">0</span> บาท</p>
-
-<div id="menu"></div>
-
-<h3>ข้อมูลลูกค้า</h3>
-<input id="customerName" placeholder="ชื่อผู้สั่ง">
-<input id="customerPhone" placeholder="เบอร์โทร">
-
-<h3>วิธีชำระเงิน</h3>
-<label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
-<label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
-
-<button onclick="submitOrder()">ส่งออเดอร์</button>
-
-</div>
+<h2>📦 ออเดอร์ทั้งหมด – CHIVATS BLACK</h2>
+<div id="orders">กำลังโหลด...</div>
 
 <script>
-// 🔥 Firebase config (ของคุณ)
 firebase.initializeApp({
-  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
-  authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order"
+  apiKey:"AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
+  authDomain:"chivats-black-order.firebaseapp.com",
+  projectId:"chivats-black-order"
 });
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-// 🔔 Telegram
-const TELEGRAM_TOKEN = "8529xxxxxxxx:AAHxxxxxxxxxxxx";
-const TELEGRAM_CHAT_ID = "5665607150";
+db.collection("orders").orderBy("time","desc")
+.onSnapshot(s=>{
+  orders.innerHTML="";
+  s.forEach(docu=>{
+    const d=docu.data();
+    const id=docu.id;
+    const t=d.time?.toDate();
+    const timeTxt=t?t.toLocaleString("th-TH"):"";
 
-// 🍔 เมนู
-const menuData = [
- {name:"เคบับไก่ L", price:69},
- {name:"เคบับไก่ M", price:60},
- {name:"เฟรนฟรายเขย่า L", price:45},
- {name:"เฟรนฟรายเขย่า M", price:40},
- {name:"ไก่ป๊อบเขย่า L", price:45},
- {name:"ไก่ป๊อบเขย่า M", price:40},
- {name:"เฟรนฟราย + ไก่ป๊อบ", price:45}
-];
+    let timer="";
+    if(d.status!=="done" && t){
+      const diff=Math.floor((Date.now()-t)/1000);
+      timer=`⏱ ${Math.floor(diff/60)}:${String(diff%60).padStart(2,"0")}`;
+    }
 
-const cart = new Array(menuData.length).fill(0);
+    let items="";
+    d.items.forEach(i=>items+=`<li>${i.name} x${i.qty}</li>`);
 
-function renderMenu(){
-  const m = document.getElementById("menu");
-  m.innerHTML="";
-  menuData.forEach((i,idx)=>{
-    m.innerHTML += `
-    <div class="item">
-      ${i.name} (${i.price}฿)
-      <div class="qty">
-        <button onclick="chg(${idx},-1)">-</button>
-        <span id="q${idx}">0</span>
-        <button onclick="chg(${idx},1)">+</button>
-      </div>
+    orders.innerHTML+=`
+    <div class="card ${d.status}">
+      <b>${timeTxt}</b><br>
+      <span class="timer">${timer}</span><br>
+      👤 ${d.name}<br>
+      📞 ${d.phone}<br>
+      💳 ${d.payment}
+      <ul>${items}</ul>
+      💰 ${d.total} บาท<br>
+      <button onclick="setStatus('${id}','doing')">รับออเดอร์</button>
+      <button onclick="setStatus('${id}','done')">เสร็จแล้ว</button>
     </div>`;
   });
-}
-renderMenu();
+});
 
-function chg(i,d){
-  cart[i]=Math.max(0,cart[i]+d);
-  document.getElementById("q"+i).innerText=cart[i];
-  calc();
-}
-function calc(){
-  let t=0;
-  menuData.forEach((i,idx)=>t+=i.price*cart[idx]);
-  document.getElementById("total").innerText=t;
-}
-
-// 🚀 ส่งออเดอร์
-async function submitOrder(){
-  const name = customerName.value.trim();
-  const phone = customerPhone.value.trim();
-  if(!name||!phone){alert("กรอกชื่อและเบอร์");return;}
-
-  const items=[];
-  let text="🛎️ ออเดอร์ใหม่ CHIVATS BLACK\n";
-  menuData.forEach((i,idx)=>{
-    if(cart[idx]>0){
-      items.push({...i,qty:cart[idx]});
-      text+=`• ${i.name} x${cart[idx]}\n`;
-    }
+function setStatus(id,status){
+  db.collection("orders").doc(id).update({
+    status,
+    finishedAt: status==="done"?new Date():null
   });
-  if(items.length===0){alert("ยังไม่เลือกเมนู");return;}
-
-  const total=Number(document.getElementById("total").innerText);
-  const pay=document.querySelector('input[name="pay"]:checked').value;
-
-  text+=`\n💰 ${total} บาท\n👤 ${name}\n📞 ${phone}\n💳 ${pay}`;
-
-  await db.collection("orders").add({
-    name,phone,payment:pay,
-    items,total,
-    status:"new",
-    time:new Date()
-  });
-
-  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text})
-  });
-
-  alert("✅ ส่งออเดอร์แล้ว");
-  location.reload();
 }
 </script>
 </body>
-</title
+</html>
