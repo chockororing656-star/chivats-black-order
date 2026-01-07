@@ -1,190 +1,115 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CHIVATS BLACK ORDER</title>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#111;
-  color:#fff;
-}
-.container{
-  max-width:480px;
-  margin:auto;
-  padding:20px;
-}
-h1{
-  color:#f5c16c;
-  text-align:center;
-}
-.menu-item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#1b1b1b;
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:8px;
-}
-.menu-name{
-  font-size:16px;
-}
-.menu-price{
-  color:#f5c16c;
-}
-.qty{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-.qty button{
-  width:32px;
-  height:32px;
-  border:none;
-  border-radius:6px;
-  font-size:18px;
-  cursor:pointer;
-}
-.qty span{
-  width:20px;
-  text-align:center;
-}
-.total{
-  font-size:18px;
-  color:#6aff6a;
-  margin:15px 0;
-}
-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:6px;
-  border:none;
-}
-.payment{
-  display:flex;
-  gap:20px;
-  margin:10px 0;
-}
-.order-btn{
-  width:100%;
-  padding:15px;
-  background:#f5c16c;
-  border:none;
-  border-radius:8px;
-  font-size:18px;
-  cursor:pointer;
-}
+body{margin:0;font-family:sans-serif;background:#111;color:#fff}
+.container{max-width:480px;margin:auto;padding:20px}
+h1{color:#f5c16c;text-align:center}
+.menu-item{display:flex;justify-content:space-between;align-items:center;
+background:#1b1b1b;padding:12px;margin-bottom:10px;border-radius:8px}
+.qty button{width:32px;height:32px;font-size:18px}
+.total{font-size:18px;color:#6aff6a;margin:15px 0}
+input{width:100%;padding:12px;margin-bottom:10px}
+.payment{display:flex;gap:20px;margin:10px 0}
+button{width:100%;padding:15px;font-size:18px;background:#f5c16c;border:none}
 </style>
 </head>
 
 <body>
 <div class="container">
-
 <h1>🥙 CHIVATS BLACK</h1>
 
-<div class="menu" id="menu"></div>
+<div id="menu"></div>
 
 <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
 
-<h3>ข้อมูลลูกค้า</h3>
 <input id="customerName" placeholder="ชื่อผู้สั่ง">
 <input id="customerPhone" placeholder="เบอร์โทร">
 
-<h3>วิธีชำระเงิน</h3>
 <div class="payment">
   <label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
   <label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
 </div>
 
-<button class="order-btn" onclick="submitOrder()">ส่งออเดอร์</button>
-
+<button onclick="submitOrder()">ส่งออเดอร์</button>
 </div>
 
 <script>
-const branchName = "สาขาหลัก";
+/* ===== Firebase ===== */
+firebase.initializeApp({
+  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
+  authDomain: "chivats-black-order.firebaseapp.com",
+  projectId: "chivats-black-order"
+});
+const db = firebase.firestore();
 
+/* ===== เมนู ===== */
 const menuData = [
-  {name:"เคบับไก่ ไซต์ L", price:69},
-  {name:"เคบับไก่ ไซต์ M", price:60},
-  {name:"เฟรนฟรายเขย่า L", price:45},
-  {name:"เฟรนฟรายเขย่า M", price:40},
-  {name:"ไก่ป๊อปเขย่า L", price:45},
-  {name:"ไก่ป๊อปเขย่า M", price:40},
-  {name:"เฟรนฟราย + ไก่ป๊อป", price:45}
+ {name:"เคบับไก่ ไซต์ L",price:69},
+ {name:"เคบับไก่ ไซต์ M",price:60},
+ {name:"เฟรนฟรายเขย่า L",price:45},
+ {name:"เฟรนฟรายเขย่า M",price:40},
+ {name:"ไก่ป๊อปเขย่า L",price:45},
+ {name:"ไก่ป๊อปเขย่า M",price:40},
+ {name:"เฟรนฟราย + ไก่ป๊อป",price:45}
 ];
 
 let cart = Array(menuData.length).fill(0);
-
 const menuEl = document.getElementById("menu");
 
-menuData.forEach((item,i)=>{
+menuData.forEach((m,i)=>{
   menuEl.innerHTML += `
     <div class="menu-item">
-      <div>
-        <div class="menu-name">${item.name}</div>
-        <div class="menu-price">${item.price} ฿</div>
-      </div>
+      <div>${m.name}<br>${m.price} ฿</div>
       <div class="qty">
-        <button onclick="changeQty(${i},-1)">-</button>
-        <span id="qty${i}">0</span>
-        <button onclick="changeQty(${i},1)">+</button>
+        <button onclick="chg(${i},-1)">-</button>
+        <span id="q${i}">0</span>
+        <button onclick="chg(${i},1)">+</button>
       </div>
-    </div>
-  `;
+    </div>`;
 });
 
-function changeQty(i,delta){
-  cart[i] = Math.max(0, cart[i] + delta);
-  document.getElementById("qty"+i).innerText = cart[i];
-  calcTotal();
+function chg(i,d){
+  cart[i]=Math.max(0,cart[i]+d);
+  document.getElementById("q"+i).innerText=cart[i];
+  calc();
 }
-
-function calcTotal(){
-  let total = 0;
-  menuData.forEach((item,i)=>{
-    total += item.price * cart[i];
-  });
-  document.getElementById("total").innerText = total;
+function calc(){
+  let t=0;
+  menuData.forEach((m,i)=>t+=m.price*cart[i]);
+  document.getElementById("total").innerText=t;
 }
 
 function submitOrder(){
-  const name = document.getElementById("customerName").value;
-  const phone = document.getElementById("customerPhone").value;
-  const payment = document.querySelector('input[name="pay"]:checked').value;
+  const name=customerName.value.trim();
+  const phone=customerPhone.value.trim();
+  const payment=document.querySelector("input[name=pay]:checked").value;
+  if(!name||!phone) return alert("กรอกข้อมูลให้ครบ");
 
-  if(!name || !phone){
-    alert("กรุณากรอกชื่อและเบอร์โทร");
-    return;
-  }
-
-  let orderItems = [];
-  menuData.forEach((item,i)=>{
-    if(cart[i] > 0){
-      orderItems.push(`${item.name} x ${cart[i]}`);
-    }
+  const items=[];
+  menuData.forEach((m,i)=>{
+    if(cart[i]>0) items.push({...m,qty:cart[i]});
   });
+  if(items.length===0) return alert("ยังไม่ได้เลือกเมนู");
 
-  if(orderItems.length === 0){
-    alert("ยังไม่ได้เลือกเมนู");
-    return;
-  }
-
-  alert(
-    "✅ ส่งออเดอร์เรียบร้อย\n\n" +
-    "สาขา: " + branchName + "\n" +
-    "รายการ:\n" + orderItems.join("\n") + "\n\n" +
-    "ยอดรวม: " + document.getElementById("total").innerText + " บาท\n" +
-    "ชำระ: " + payment
-  );
-
-  location.reload();
+  db.collection("orders").add({
+    name, phone, payment,
+    items,
+    total:+total.innerText,
+    branch:"สาขาหลัก",
+    time:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>{
+    alert("✅ ออเดอร์เข้าแล้ว");
+    location.reload();
+  });
 }
 </script>
-
 </body>
 </html>
