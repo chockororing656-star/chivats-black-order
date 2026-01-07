@@ -142,22 +142,15 @@ window.submitOrder = async () => {
 
   await addDoc(collection(db, "orders"), order);
 
-  const msg =
-`🛎 ออเดอร์ใหม่
+  const text = encodeURIComponent(`
+🛎 ออเดอร์ใหม่
 👤 ${order.name}
 📞 ${order.phone}
 💳 ${order.payment}
+💰 ${order.total} บาท
+`);
 
-${cart.map(i => "- "+i.name+" "+i.price+"฿").join("\n")}
-💰 รวม ${total} บาท`;
-
-  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: msg
-    })
+fetch(`https://api.callmebot.com/telegram/text.php?user=566507150&text=${text}&apikey=66967636910`);    })
   });
 
   alert("ส่งออเดอร์เรียบร้อย");
@@ -169,3 +162,4 @@ ${cart.map(i => "- "+i.name+" "+i.price+"฿").join("\n")}
 
 </body>
 </html>
+
