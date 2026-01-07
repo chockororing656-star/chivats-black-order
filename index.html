@@ -1,120 +1,102 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CHIVATS BLACK</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CHIVATS BLACK ORDER</title>
 
 <style>
-body{
-  margin:0;
-  background:#0f0f0f;
-  font-family:sans-serif;
+body {
+  font-family: sans-serif;
+  background:#111;
   color:#fff;
-}
-.container{
-  max-width:480px;
-  margin:auto;
+  margin:0;
   padding:16px;
 }
-h1{color:#f5b942;text-align:center}
-.menu button{
+h1,h2 { margin:8px 0; }
+.menu button {
   width:100%;
+  margin:6px 0;
   padding:14px;
-  margin-bottom:10px;
   border:none;
   border-radius:12px;
-  background:#f5b942;
+  background:#f1c24a;
   font-size:16px;
   font-weight:bold;
 }
-.card{
+.card {
   background:#1c1c1c;
-  padding:12px;
+  padding:14px;
   border-radius:12px;
-  margin-top:16px;
+  margin-top:14px;
 }
-input,textarea{
+input {
   width:100%;
   padding:12px;
+  margin-top:8px;
   border-radius:8px;
   border:none;
-  margin-bottom:10px;
   font-size:16px;
 }
-.submit{
+.radio-group {
+  display:flex;
+  gap:20px;
+  margin-top:10px;
+}
+button.submit {
   width:100%;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:#f5b942;
+  margin-top:14px;
+  padding:16px;
   font-size:18px;
+  background:#f1c24a;
+  border:none;
+  border-radius:14px;
   font-weight:bold;
 }
-.remove{
-  float:right;
-  background:red;
-  border:none;
-  border-radius:6px;
-  color:#fff;
-}
-.radio{
-  margin-bottom:8px;
-}
-.qr{
-  text-align:center;
+.total {
   margin-top:10px;
+  font-size:18px;
 }
 </style>
 </head>
 
 <body>
-<div class="container">
+
 <h1>🍢 CHIVATS BLACK</h1>
 
+<h2>เมนูอาหาร</h2>
 <div class="menu">
-<button onclick="addItem('เคบับไก่ L',69)">เคบับไก่ L +69</button>
-<button onclick="addItem('เคบับไก่ M',60)">เคบับไก่ M +60</button>
-<button onclick="addItem('เฟรนฟรายเขย่า L',45)">เฟรนฟรายเขย่า L +45</button>
-<button onclick="addItem('เฟรนฟรายเขย่า M',40)">เฟรนฟรายเขย่า M +40</button>
-<button onclick="addItem('ไก่ป๊อปเขย่า L',45)">ไก่ป๊อปเขย่า L +45</button>
-<button onclick="addItem('ไก่ป๊อปเขย่า M',40)">ไก่ป๊อปเขย่า M +40</button>
-<button onclick="addItem('เฟรนฟราย + ไก่ป๊อป',45)">เฟรนฟราย + ไก่ป๊อป +45</button>
+  <button onclick="addItem('เคบับไก่ L',69)">เคบับไก่ L +69</button>
+  <button onclick="addItem('เคบับไก่ M',60)">เคบับไก่ M +60</button>
+  <button onclick="addItem('เฟรนฟรายเขย่า L',45)">เฟรนฟรายเขย่า L +45</button>
+  <button onclick="addItem('เฟรนฟรายเขย่า M',40)">เฟรนฟรายเขย่า M +40</button>
+  <button onclick="addItem('ไก่ป๊อปเขย่า L',45)">ไก่ป๊อปเขย่า L +45</button>
+  <button onclick="addItem('ไก่ป๊อปเขย่า M',40)">ไก่ป๊อปเขย่า M +40</button>
+  <button onclick="addItem('เฟรนฟราย + ไก่ป๊อป',45)">เฟรนฟราย + ไก่ป๊อป +45</button>
 </div>
 
 <div class="card">
-<h3>🧾 รายการที่เลือก</h3>
-<div id="list"></div>
-<p>💰 ยอดรวม: <b id="total">0</b> บาท</p>
+  <h2>🧾 รายการที่เลือก</h2>
+  <div id="items"></div>
+  <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
 </div>
 
 <div class="card">
-<h3>ข้อมูลลูกค้า</h3>
-<input id="name" placeholder="ชื่อผู้สั่ง">
-<input id="phone" placeholder="เบอร์โทร">
+  <h2>ข้อมูลลูกค้า</h2>
+  <input id="name" placeholder="ชื่อผู้สั่ง" value="ลูกค้าหน้าร้าน">
+  <input id="phone" placeholder="เบอร์โทร" value="0000000000">
 
-<h3>วิธีชำระเงิน</h3>
-<div class="radio">
-<input type="radio" name="pay" value="เงินสด" checked onchange="toggleQR()"> เงินสด
-</div>
-<div class="radio">
-<input type="radio" name="pay" value="PromptPay" onchange="toggleQR()"> PromptPay
-</div>
+  <div class="radio-group">
+    <label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
+    <label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
+  </div>
 
-<div id="qrBox" class="qr" style="display:none">
-<img src="https://promptpay.io/66967636910.png" width="220">
-<p>สแกนเพื่อชำระเงิน</p>
-</div>
-
-<textarea id="note" placeholder="โน้ตถึงร้าน (ไม่เผ็ด / รับเอง ฯลฯ)"></textarea>
-
-<button class="submit" onclick="sendOrder()">ส่งออเดอร์</button>
-</div>
+  <button class="submit" onclick="submitOrder()">ส่งออเดอร์</button>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyXXXX",
@@ -125,60 +107,65 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let cart=[];
+const TELEGRAM_BOT_TOKEN = "8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q";
+const TELEGRAM_CHAT_ID  = "566507150";
 
-window.addItem=(name,price)=>{
-  const f=cart.find(i=>i.name===name);
-  if(f) f.qty++;
-  else cart.push({name,price,qty:1});
+let cart = [];
+let total = 0;
+
+window.addItem = (name, price) => {
+  cart.push({ name, price });
+  total += price;
   render();
+};
+
+function render() {
+  document.getElementById("items").innerHTML =
+    cart.map(i => `• ${i.name} (${i.price})`).join("<br>");
+  document.getElementById("total").innerText = total;
 }
 
-function render(){
-  const list=document.getElementById("list");
-  let total=0;
-  list.innerHTML="";
-  cart.forEach((i,idx)=>{
-    total+=i.price*i.qty;
-    list.innerHTML+=`${i.name} x${i.qty}
-      <button class="remove" onclick="removeItem(${idx})">X</button><br>`;
-  });
-  document.getElementById("total").innerText=total;
-}
-
-window.removeItem=i=>{
-  cart.splice(i,1);
-  render();
-}
-
-window.toggleQR=()=>{
-  const pay=document.querySelector("input[name=pay]:checked").value;
-  document.getElementById("qrBox").style.display =
-    pay==="PromptPay"?"block":"none";
-}
-
-window.sendOrder=async()=>{
-  const name=nameInput.value.trim();
-  const phone=phoneInput.value.trim();
-  const pay=document.querySelector("input[name=pay]:checked").value;
-  const note=document.getElementById("note").value;
-
-  if(!name||!phone||cart.length===0){
-    alert("กรอกข้อมูลให้ครบและเลือกเมนู");
+window.submitOrder = async () => {
+  if (cart.length === 0) {
+    alert("ยังไม่ได้เลือกเมนู");
     return;
   }
 
-  await addDoc(collection(db,"orders"),{
-    name,phone,payment:pay,note,
-    items:cart,
-    total:cart.reduce((s,i)=>s+i.price*i.qty,0),
-    status:"new",
-    time:serverTimestamp()
+  const order = {
+    items: cart,
+    total,
+    name: document.getElementById("name").value,
+    phone: document.getElementById("phone").value,
+    payment: document.querySelector('input[name="pay"]:checked').value,
+    createdAt: serverTimestamp()
+  };
+
+  await addDoc(collection(db, "orders"), order);
+
+  const msg =
+`🛎 ออเดอร์ใหม่
+👤 ${order.name}
+📞 ${order.phone}
+💳 ${order.payment}
+
+${cart.map(i => "- "+i.name+" "+i.price+"฿").join("\n")}
+💰 รวม ${total} บาท`;
+
+  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: msg
+    })
   });
 
   alert("ส่งออเดอร์เรียบร้อย");
-  location.reload();
-}
+  cart = [];
+  total = 0;
+  render();
+};
 </script>
+
 </body>
 </html>
