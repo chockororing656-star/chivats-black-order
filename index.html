@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CHIVATS BLACK ORDER</title>
 
 <style>
@@ -30,18 +30,23 @@ h1{
   background:#f5c04f;
   font-size:16px;
 }
-.cart{
+.card{
   background:#1c1c1c;
   border-radius:10px;
   padding:12px;
   margin-top:12px;
 }
+input{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+}
 .total{
   font-size:18px;
   margin-top:8px;
-}
-.payment{
-  margin-top:12px;
 }
 .payment label{
   display:block;
@@ -61,7 +66,8 @@ button#submitOrder{
 
 <body>
 <div class="container">
-<h1>CHIVATS BLACK</h1>
+
+<h1>🍢 CHIVATS BLACK</h1>
 
 <!-- MENU -->
 <div class="menu">
@@ -75,13 +81,21 @@ button#submitOrder{
 </div>
 
 <!-- CART -->
-<div class="cart">
+<div class="card">
   <div id="cartList">ยังไม่มีรายการ</div>
   <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
 </div>
 
+<!-- CUSTOMER INFO -->
+<div class="card">
+  <h3>ข้อมูลลูกค้า</h3>
+  <input id="customerName" placeholder="ชื่อลูกค้า">
+  <input id="customerPhone" placeholder="เบอร์โทร">
+</div>
+
 <!-- PAYMENT -->
-<div class="payment">
+<div class="card payment">
+  <h3>วิธีชำระเงิน</h3>
   <label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
   <label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
 </div>
@@ -90,75 +104,79 @@ button#submitOrder{
 
 </div>
 
-<!-- FIREBASE + LOGIC -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<script>
 /* 🔥 Firebase */
 const firebaseConfig = {
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
   authDomain: "chivats-black-order.firebaseapp.com",
   projectId: "chivats-black-order",
 };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 /* 🔔 Telegram (CallMeBot) */
 const TELEGRAM_USER = "566507150";
 const TELEGRAM_APIKEY = "66967636910";
 
 /* DATA */
-window.cart = [];
+let cart = [];
 
-window.addItem = (name, price) => {
+function addItem(name, price){
   cart.push({name, price});
   renderCart();
-};
+}
 
 function renderCart(){
   const list = document.getElementById("cartList");
-  if(cart.length===0){
+  if(cart.length === 0){
     list.innerHTML = "ยังไม่มีรายการ";
   }else{
-    list.innerHTML = cart.map(i=>`• ${i.name}`).join("<br>");
+    list.innerHTML = cart.map(i=>`• ${i.name} ${i.price}฿`).join("<br>");
   }
   document.getElementById("total").innerText =
     cart.reduce((s,i)=>s+i.price,0);
 }
 
 document.getElementById("submitOrder").onclick = async () => {
-  if(cart.length===0){
+  if(cart.length === 0){
     alert("กรุณาเลือกเมนู");
     return;
   }
 
+  const name = document.getElementById("customerName").value || "ไม่ระบุชื่อ";
+  const phone = document.getElementById("customerPhone").value || "-";
   const payment = document.querySelector('input[name="pay"]:checked').value;
   const total = cart.reduce((s,i)=>s+i.price,0);
 
   const order = {
-    name:"ลูกค้าหน้าร้าน",
-    phone:"0000000000",
+    name,
+    phone,
     payment,
-    items:cart,
+    items: cart,
     total,
-    status:"new",
-    createdAt:serverTimestamp()
+    status: "new",
+    createdAt: new Date()
   };
 
-  await addDoc(collection(db,"orders"),order);
+  await db.collection("orders").add(order);
 
   const text = encodeURIComponent(
 `🛎 ออเดอร์ใหม่
-💰 ${total} บาท
+👤 ${name}
+📞 ${phone}
 💳 ${payment}
+💰 ${total} บาท
 ${cart.map(i=>`• ${i.name}`).join("\n")}`
   );
 
   fetch(`https://api.callmebot.com/telegram/text.php?user=${TELEGRAM_USER}&text=${text}&apikey=${TELEGRAM_APIKEY}`);
 
   alert("ส่งออเดอร์เรียบร้อย");
-  cart.length = 0;
+  cart = [];
   renderCart();
 };
 </script>
