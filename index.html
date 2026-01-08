@@ -86,7 +86,7 @@ button#submitOrder{
   <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
 </div>
 
-<!-- CUSTOMER INFO -->
+<!-- CUSTOMER -->
 <div class="card">
   <h3>ข้อมูลลูกค้า</h3>
   <input id="customerName" placeholder="ชื่อลูกค้า">
@@ -109,7 +109,7 @@ button#submitOrder{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* 🔥 Firebase */
+/* ================= FIREBASE ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
   authDomain: "chivats-black-order.firebaseapp.com",
@@ -118,11 +118,11 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* 🔔 Telegram (CallMeBot) */
-const TELEGRAM_USER = "566507150";
-const TELEGRAM_APIKEY = "66967636910";
+/* ================= TELEGRAM (ตัวจริง) ================= */
+const TELEGRAM_BOT_TOKEN = "8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q";
+const TELEGRAM_CHAT_ID  = "566507150";
 
-/* DATA */
+/* ================= DATA ================= */
 let cart = [];
 
 function addItem(name, price){
@@ -142,6 +142,7 @@ function renderCart(){
 }
 
 document.getElementById("submitOrder").onclick = async () => {
+
   if(cart.length === 0){
     alert("กรุณาเลือกเมนู");
     return;
@@ -162,18 +163,27 @@ document.getElementById("submitOrder").onclick = async () => {
     createdAt: new Date()
   };
 
+  /* 🔥 Firebase */
   await db.collection("orders").add(order);
 
-  const text = encodeURIComponent(
+  /* 🔔 Telegram (วิธีนี้เด้งแน่นอน) */
+  const text =
 `🛎 ออเดอร์ใหม่
 👤 ${name}
 📞 ${phone}
 💳 ${payment}
 💰 ${total} บาท
-${cart.map(i=>`• ${i.name}`).join("\n")}`
-  );
 
-  fetch(`https://api.callmebot.com/telegram/text.php?user=${TELEGRAM_USER}&text=${text}&apikey=${TELEGRAM_APIKEY}`);
+${cart.map(i=>`• ${i.name} ${i.price}฿`).join("\n")}`;
+
+  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: text
+    })
+  });
 
   alert("ส่งออเดอร์เรียบร้อย");
   cart = [];
