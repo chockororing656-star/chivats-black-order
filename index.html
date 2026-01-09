@@ -118,7 +118,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* ================= TELEGRAM (ตัวจริง) ================= */
+/* ================= TELEGRAM ================= */
 const TELEGRAM_BOT_TOKEN = "8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q";
 const TELEGRAM_CHAT_ID  = "566507150";
 
@@ -160,32 +160,32 @@ document.getElementById("submitOrder").onclick = async () => {
     items: cart,
     total,
     status: "new",
-    createdAt: new Date()
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  /* 🔥 Firebase */
+  /* 🔥 บันทึก Firebase */
   await db.collection("orders").add(order);
 
-  /* 🔔 Telegram (วิธีนี้เด้งแน่นอน) */
-  const text =
-`🛎 ออเดอร์ใหม่
-👤 ${name}
-📞 ${phone}
-💳 ${payment}
-💰 ${total} บาท
+  /* 🔔 Telegram (await + ชัวร์) */
+  const message =
+`🛎 ออเดอร์ใหม่ - CHIVATS BLACK
+👤 ชื่อ: ${name}
+📞 เบอร์: ${phone}
+💳 ชำระ: ${payment}
+💰 รวม: ${total} บาท
 
 ${cart.map(i=>`• ${i.name} ${i.price}฿`).join("\n")}`;
 
-  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       chat_id: TELEGRAM_CHAT_ID,
-      text: text
+      text: message
     })
   });
 
-  alert("ส่งออเดอร์เรียบร้อย");
+  alert("✅ ส่งออเดอร์เรียบร้อย");
   cart = [];
   renderCart();
 };
@@ -193,3 +193,4 @@ ${cart.map(i=>`• ${i.name} ${i.price}฿`).join("\n")}`;
 
 </body>
 </html>
+
