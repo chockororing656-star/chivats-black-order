@@ -63,13 +63,16 @@ input{width:100%;padding:10px;border-radius:8px;border:none;margin-top:8px}
 </div>
 </div>
 
+<!-- 🔊 AUDIO -->
+<audio id="ding" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 /* ================= CONFIG ================= */
-const ADMIN_PASSWORD = "1234";
+const ADMIN_PASSWORD = "1234"; // 🔐 เปลี่ยนรหัสตรงนี้
 const firebaseConfig = {
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
   authDomain: "chivats-black-order.firebaseapp.com",
@@ -78,8 +81,8 @@ const firebaseConfig = {
 
 /* ================= LOGIN ================= */
 let soundEnabled = false;
-let audioCtxUnlocked = false;
-let audioCtx;
+let audioUnlocked = false;
+let audioCtx, ding;
 
 function login(){
   if(password.value === ADMIN_PASSWORD){
@@ -90,35 +93,30 @@ function login(){
   }
 }
 
-/* ================= SOUND (100% WORK) ================= */
+/* ================= AUDIO UNLOCK ================= */
 function unlockAudio(){
-  if(audioCtxUnlocked) return;
+  if(audioUnlocked) return;
+
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  audioCtx.resume().then(()=>{
-    audioCtxUnlocked = true;
-    console.log("🔊 AudioContext unlocked");
+  ding = document.getElementById("ding");
+
+  const source = audioCtx.createMediaElementSource(ding);
+  source.connect(audioCtx.destination);
+
+  ding.muted = true;
+  ding.play().then(()=>{
+    ding.pause();
+    ding.currentTime = 0;
+    ding.muted = false;
+    audioUnlocked = true;
+    console.log("🔊 Audio unlocked");
+  }).catch(e=>{
+    console.log("Unlock failed", e);
   });
 }
 
-function playBeep(){
-  if(!audioCtxUnlocked) return;
-
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.type = "sine";
-  osc.frequeเปลี่ยนรหัสต
-  gain.gain.value = 0.3;
-
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  osc.start();
-  setTimeout(()=>osc.stop(), 200);
-}
-
 function enableSound(){
-  unlockAเสียงชัดlockAเสockAเสีckAเสียkAเสียงAเสียงชเสียงชัสียงชเสียงชั
+  unlockAudio();              // 🔥 สำคัญมาก
   soundEnabled = true;
   document.getElementById("enableSound").style.display="none";
   document.getElementById("admin").style.display="block";
@@ -154,8 +152,9 @@ ${o.status==="cooking"?`<button onclick="setStatus('${doc.id}','done')">เส�
         document.getElementById(o.status || "new").appendChild(tr);
       });
 
-      if(!firstLoad && soundEnabled){
-        pปลดล็อกเสียง      }
+      if(!firstLoad && soundEnabled && audioUnlocked){
+        ding.play();
+      }
       firstLoad = false;
     });
 
