@@ -9,14 +9,12 @@
 body{margin:0;font-family:sans-serif;background:#111;color:#fff}
 h1{text-align:center;color:#f5c04f}
 .container{max-width:1200px;margin:auto;padding:16px}
+.section{margin-top:30px}
+.section h2{color:#f5c04f}
 
-table{width:100%;border-collapse:collapse;margin-top:16px}
+table{width:100%;border-collapse:collapse;margin-top:8px}
 th,td{border:1px solid #333;padding:8px;font-size:14px;vertical-align:top}
 th{background:#222}
-tr.new{background:#1b1b1b}
-tr.accepted{background:#24331f}
-tr.cooking{background:#332b1f}
-tr.done{background:#1f3326}
 
 button{
   padding:6px 10px;
@@ -26,34 +24,90 @@ button{
   cursor:pointer;
   margin:2px;
 }
+
+/* LOGIN */
+#login{
+  max-width:300px;
+  margin:100px auto;
+  text-align:center;
+}
+input{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  margin-top:8px;
+}
 </style>
 </head>
 
 <body>
-<div class="container">
-<h1>📦 ออเดอร์ทั้งหมด – CHIVATS BLACK</h1>
 
-<table>
-<thead>
-<tr>
-  <th>เวลา</th>
-  <th>ลูกค้า</th>
-  <th>รายการ</th>
-  <th>ยอด</th>
-  <th>ชำระ</th>
-  <th>สถานะ</th>
-  <th>จัดการ</th>
-</tr>
-</thead>
-<tbody id="orders"></tbody>
-</table>
+<!-- 🔐 LOGIN -->
+<div id="login">
+  <h2>🔐 ADMIN LOGIN</h2>
+  <input id="password" type="password" placeholder="รหัสผ่าน">
+  <button onclick="login()">เข้าสู่ระบบ</button>
 </div>
+
+<!-- 🧾 ADMIN -->
+<div id="admin" style="display:none">
+<div class="container">
+<h1>📦 CHIVATS BLACK – ADMIN</h1>
+
+<div class="section">
+<h2>⏳ ออเดอร์ใหม่</h2>
+<table><thead><tr><th>เวลา</th><th>ลูกค้า</th><th>รายการ</th><th>ยอด</th><th>จัดการ</th></tr></thead>
+<tbody id="new"></tbody></table>
+</div>
+
+<div class="section">
+<h2>▶️ รับออเดอร์แล้ว</h2>
+<table><thead><tr><th>เวลา</th><th>ลูกค้า</th><th>รายการ</th><th>ยอด</th><th>จัดการ</th></tr></thead>
+<tbody id="accepted"></tbody></table>
+</div>
+
+<div class="section">
+<h2>🍳 กำลังทำ</h2>
+<table><thead><tr><th>เวลา</th><th>ลูกค้า</th><th>รายการ</th><th>ยอด</th><th>จัดการ</th></tr></thead>
+<tbody id="cooking"></tbody></table>
+</div>
+
+<div class="section">
+<h2>✅ เสร็จแล้ว</h2>
+<table><thead><tr><th>เวลา</th><th>ลูกค้า</th><th>รายการ</th><th>ยอด</th></tr></thead>
+<tbody id="done"></tbody></table>
+</div>
+
+</div>
+</div>
+
+<!-- 🔊 SOUND -->
+<audio id="ding" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+/* 🔐 PASSWORD */
+const ADMIN_PASSWORD = "1234"; // 👈 เปลี่ยนตรงนี้
+
+function login(){
+  if(document.getElementById("password").value === ADMIN_PASSWORD){
+    localStorage.setItem("admin","1");
+    location.reload();
+  }else{
+    alert("รหัสไม่ถูกต้อง");
+  }
+}
+
+if(localStorage.getItem("admin")==="1"){
+  document.getElementById("login").style.display="none";
+  document.getElementById("admin").style.display="block";
+}
+
+/* 🔥 FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
   authDomain: "chivats-black-order.firebaseapp.com",
@@ -61,44 +115,41 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-const statusText = {
-  new:"⏳ ใหม่",
-  accepted:"▶️ รับแล้ว",
-  cooking:"🍳 กำลังทำ",
-  done:"✅ เสร็จแล้ว"
-};
+let firstLoad = true;
 
 db.collection("orders")
 .orderBy("createdAt","desc")
 .onSnapshot(snap=>{
-  const tbody = document.getElementById("orders");
-  tbody.innerHTML = "";
+  ["new","accepted","cooking","done"].forEach(s=>{
+    document.getElementById(s).innerHTML="";
+  });
 
   snap.forEach(doc=>{
     const o = doc.data();
     const tr = document.createElement("tr");
-    tr.className = o.status || "new";
-
     tr.innerHTML = `
 <td>${o.createdAt?.toDate().toLocaleString()}</td>
 <td>${o.name}<br>${o.phone}</td>
 <td>${o.items.map(i=>`• ${i.name}`).join("<br>")}</td>
-<td>${o.total} ฿</td>
-<td>${o.payment}</td>
-<td>${statusText[o.status]}</td>
+<td>${o.total}฿</td>
 <td>
-  ${o.status==="new" ? `<button onclick="setStatus('${doc.id}','accepted')">รับ</button>`:""}
-  ${o.status==="accepted" ? `<button onclick="setStatus('${doc.id}','cooking')">ทำ</button>`:""}
-  ${o.status==="cooking" ? `<button onclick="setStatus('${doc.id}','done')">เสร็จ</button>`:""}
-</td>
-`;
-    tbody.appendChild(tr);
+${o.status==="new"?`<button onclick="setStatus('${doc.id}','accepted')">รับ</button>`:""}
+${o.status==="accepted"?`<button onclick="setStatus('${doc.id}','cooking')">ทำ</button>`:""}
+${o.status==="cooking"?`<button onclick="setStatus('${doc.id}','done')">เสร็จ</button>`:""}
+</td>`;
+    document.getElementById(o.status || "new").appendChild(tr);
   });
+
+  if(!firstLoad){
+    document.getElementById("ding").play();
+  }
+  firstLoad=false;
 });
 
 function setStatus(id,status){
   db.collection("orders").doc(id).update({status});
 }
 </script>
+
 </body>
 </html>
