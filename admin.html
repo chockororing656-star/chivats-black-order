@@ -7,62 +7,82 @@
 
 <style>
 body{margin:0;font-family:sans-serif;background:#111;color:#fff}
-h1{text-align:center;color:#f5c04f}
+h1,h2{text-align:center;color:#f5c04f}
 .container{max-width:1200px;margin:auto;padding:16px}
 .section{margin-top:30px}
-.section h2{color:#f5c04f}
 table{width:100%;border-collapse:collapse;margin-top:8px}
-th,td{border:1px solid #333;padding:8px;font-size:14px}
+th,td{border:1px solid #333;padding:8px;font-size:14px;vertical-align:top}
 th{background:#222}
 button{padding:6px 10px;border:none;border-radius:6px;background:#f5c04f;cursor:pointer;margin:2px}
 input{width:100%;padding:10px;border-radius:8px;border:none;margin-top:8px}
+#login,#enableSound{max-width:320px;margin:120px auto;text-align:center}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login" style="max-width:300px;margin:100px auto;text-align:center">
+<!-- 🔐 LOGIN -->
+<div id="login">
   <h2>🔐 ADMIN LOGIN</h2>
   <input id="password" type="password" placeholder="รหัสผ่าน">
   <button onclick="login()">เข้าสู่ระบบ</button>
 </div>
 
-<!-- ENABLE SOUND -->
-<div id="enableSound" style="display:none;text-align:center;margin-top:100px">
+<!-- 🔊 ENABLE SOUND -->
+<div id="enableSound" style="display:none">
   <h2>🔊 เปิดเสียงแจ้งเตือน</h2>
+  <p>ต้องกดปุ่มนี้ 1 ครั้ง<br>เพื่อให้ Browser อนุญาตเสียง</p>
   <button onclick="enableSound()">เปิดเสียง</button>
 </div>
 
-<!-- ADMIN -->
+<!-- 📦 ADMIN -->
 <div id="admin" style="display:none">
 <div class="container">
 <h1>📦 CHIVATS BLACK – ADMIN</h1>
 
-<div class="section"><h2>⏳ ออเดอร์ใหม่</h2>
-<table><tbody id="new"></tbody></table></div>
+<div class="section">
+<h2>⏳ ออเดอร์ใหม่</h2>
+<table><tbody id="new"></tbody></table>
+</div>
 
-<div class="section"><h2>▶️ รับออเดอร์แล้ว</h2>
-<table><tbody id="accepted"></tbody></table></div>
+<div class="section">
+<h2>▶️ รับออเดอร์แล้ว</h2>
+<table><tbody id="accepted"></tbody></table>
+</div>
 
-<div class="section"><h2>🍳 กำลังทำ</h2>
-<table><tbody id="cooking"></tbody></table></div>
+<div class="section">
+<h2>🍳 กำลังทำออเดอร์</h2>
+<table><tbody id="cooking"></tbody></table>
+</div>
 
-<div class="section"><h2>✅ เสร็จแล้ว</h2>
-<table><tbody id="done"></tbody></table></div>
+<div class="section">
+<h2>✅ ออเดอร์เสร็จแล้ว</h2>
+<table><tbody id="done"></tbody></table>
+</div>
 
 </div>
 </div>
 
-<audio id="ding" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+<!-- 🔊 AUDIO -->
+<audio id="ding" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ===== LOGIN ===== */
-const ADMIN_PASSWORD = "1234"; // 
+/* ================= CONFIG ================= */
+const ADMIN_PASSWORD = "1234"; // 🔐 เปลี่ยนรหัสตรงนี้
+const firebaseConfig = {
+  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
+  authDomain: "chivats-black-order.firebaseapp.com",
+  projectId: "chivats-black-order"
+};
+
+/* ================= LOGIN ================= */
 let soundEnabled = false;
+let audioUnlocked = false;
+let audioCtx, ding;
 
 function login(){
   if(password.value === ADMIN_PASSWORD){
@@ -73,55 +93,74 @@ function login(){
   }
 }
 
+/* ================= AUDIO UNLOCK ================= */
+function unlockAudio(){
+  if(audioUnlocked) return;
+
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  ding = document.getElementById("ding");
+
+  const source = audioCtx.createMediaElementSource(ding);
+  source.connect(audioCtx.destination);
+
+  ding.muted = true;
+  ding.play().then(()=>{
+    ding.pause();
+    ding.currentTime = 0;
+    ding.muted = false;
+    audioUnlocked = true;
+    console.log("🔊 Audio unlocked");
+  }).catch(e=>{
+    console.log("Unlock failed", e);
+  });
+}
+
 function enableSound(){
+  unlockAudio();              // 🔥 สำคัญมาก
+  soundEnabled = true;
   document.getElementById("enableSound").style.display="none";
   document.getElementById("admin").style.display="block";
-  soundEnabled = true;
   startFirebase();
 }
 
-/* ===== FIREBASE ===== */
+/* ================= FIREBASE ================= */
 function startFirebase(){
-  firebase.initializeApp({
-    apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
-    authDomain: "chivats-black-order.firebaseapp.com",
-    projectId: "chivats-black-order"
-  });
+  firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-
   let firstLoad = true;
 
-  db.collection("orders").orderBy("createdAt","desc")
-  .onSnapshot(snap=>{
-    ["new","accepted","cooking","done"].forEach(s=>{
-      document.getElementById(s).innerHTML="";
-    });
+  db.collection("orders")
+    .orderBy("createdAt","desc")
+    .onSnapshot(snap=>{
+      ["new","accepted","cooking","done"].forEach(s=>{
+        document.getElementById(s).innerHTML="";
+      });
 
-    snap.forEach(doc=>{
-      const o = doc.data();
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-<td>${o.createdAt?.toDate().toLocaleString()}</td>
-<td>${o.name}</td>
-<td>${o.items.map(i=>i.name).join(", ")}</td>
-<td>${o.total}฿</td>
+      snap.forEach(doc=>{
+        const o = doc.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+<td>${o.createdAt?.toDate().toLocaleString("th-TH") || ""}</td>
+<td>${o.name}<br>${o.phone}</td>
+<td>${o.items.map(i=>`• ${i.name}`).join("<br>")}</td>
+<td>${o.total} ฿</td>
 <td>
 ${o.status==="new"?`<button onclick="setStatus('${doc.id}','accepted')">รับ</button>`:""}
 ${o.status==="accepted"?`<button onclick="setStatus('${doc.id}','cooking')">ทำ</button>`:""}
 ${o.status==="cooking"?`<button onclick="setStatus('${doc.id}','done')">เสร็จ</button>`:""}
 </td>`;
-      document.getElementById(o.status||"new").appendChild(tr);
-    });
+        document.getElementById(o.status || "new").appendChild(tr);
+      });
 
-    if(!firstLoad && soundEnabled){
-      document.getElementById("ding").play();
-    }
-    firstLoad=false;
-  });
+      if(!firstLoad && soundEnabled && audioUnlocked){
+        ding.play();
+      }
+      firstLoad = false;
+    });
 
   window.setStatus = (id,status)=>{
     db.collection("orders").doc(id).update({status});
-  }
+  };
 }
 </script>
 
