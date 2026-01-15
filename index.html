@@ -6,61 +6,14 @@
 <title>CHIVATS BLACK ORDER</title>
 
 <style>
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#111;
-  color:#fff;
-}
-.container{
-  max-width:480px;
-  margin:auto;
-  padding:16px;
-}
-h1{
-  text-align:center;
-  color:#f5c04f;
-}
-.menu button{
-  width:100%;
-  margin:6px 0;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  background:#f5c04f;
-  font-size:16px;
-}
-.card{
-  background:#1c1c1c;
-  border-radius:10px;
-  padding:12px;
-  margin-top:12px;
-}
-input{
-  width:100%;
-  padding:12px;
-  margin:8px 0;
-  border-radius:8px;
-  border:none;
-  font-size:16px;
-}
-.total{
-  font-size:18px;
-  margin-top:8px;
-}
-.payment label{
-  display:block;
-  margin:6px 0;
-}
-button#submitOrder{
-  margin-top:14px;
-  width:100%;
-  padding:16px;
-  font-size:18px;
-  background:#f5c04f;
-  border:none;
-  border-radius:12px;
-}
+body{margin:0;font-family:sans-serif;background:#111;color:#fff}
+.container{max-width:480px;margin:auto;padding:16px}
+h1{text-align:center;color:#f5c04f}
+.menu button{width:100%;margin:6px 0;padding:14px;border:none;border-radius:10px;background:#f5c04f;font-size:16px}
+.card{background:#1c1c1c;border-radius:10px;padding:12px;margin-top:12px}
+input{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none;font-size:16px}
+.total{font-size:18px;margin-top:8px}
+button#submitOrder{margin-top:14px;width:100%;padding:16px;font-size:18px;background:#f5c04f;border:none;border-radius:12px}
 </style>
 </head>
 
@@ -69,7 +22,6 @@ button#submitOrder{
 
 <h1>🍢 CHIVATS BLACK</h1>
 
-<!-- MENU -->
 <div class="menu">
   <button onclick="addItem('เคบับไก่ L',69)">เคบับไก่ L +69</button>
   <button onclick="addItem('เคบับไก่ M',60)">เคบับไก่ M +60</button>
@@ -80,27 +32,22 @@ button#submitOrder{
   <button onclick="addItem('เฟรนฟราย + ไก่ป๊อป',45)">เฟรนฟราย + ไก่ป๊อป +45</button>
 </div>
 
-<!-- CART -->
 <div class="card">
   <div id="cartList">ยังไม่มีรายการ</div>
   <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
 </div>
 
-<!-- CUSTOMER -->
 <div class="card">
-  <h3>ข้อมูลลูกค้า</h3>
   <input id="customerName" placeholder="ชื่อลูกค้า">
   <input id="customerPhone" placeholder="เบอร์โทร">
 </div>
 
-<!-- PAYMENT -->
-<div class="card payment">
-  <h3>วิธีชำระเงิน</h3>
+<div class="card">
   <label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
   <label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
 </div>
 
-<button id="submitOrder" type="button">ส่งออเดอร์</button>
+<button id="submitOrder">ส่งออเดอร์</button>
 
 </div>
 
@@ -109,20 +56,19 @@ button#submitOrder{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ================= FIREBASE ================= */
-const firebaseConfig = {
+/* ===== FIREBASE ===== */
+firebase.initializeApp({
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
   authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order",
-};
-firebase.initializeApp(firebaseConfig);
+  projectId: "chivats-black-order"
+});
 const db = firebase.firestore();
 
-/* ================= TELEGRAM ================= */
-const TELEGRAM_BOT_TOKEN = "8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q";
-const TELEGRAM_CHAT_ID  = "566507150";
+/* ===== TELEGRAM ===== */
+const BOT_TOKEN = "8529657624:AAHeinqknXFiKrgyuyOz7h-GCbPUVoHWf3Q";
+const CHAT_ID  = "566507150";
 
-/* ================= DATA ================= */
+/* ===== DATA ===== */
 let cart = [];
 
 function addItem(name, price){
@@ -131,75 +77,53 @@ function addItem(name, price){
 }
 
 function renderCart(){
-  const list = document.getElementById("cartList");
-  if(cart.length === 0){
-    list.innerHTML = "ยังไม่มีรายการ";
-  }else{
-    list.innerHTML = cart.map(i=>`• ${i.name} ${i.price}฿`).join("<br>");
-  }
+  document.getElementById("cartList").innerHTML =
+    cart.length ? cart.map(i=>`• ${i.name} ${i.price}฿`).join("<br>") : "ยังไม่มีรายการ";
   document.getElementById("total").innerText =
     cart.reduce((s,i)=>s+i.price,0);
 }
-document.getElementById("submitOrder").onclick = async () => {
 
-  if(cart.length === 0){
-    alert("กรุณาเลือกเมนู");
-    return;
-  }
+document.getElementById("submitOrder").onclick = async ()=>{
+  if(!cart.length) return alert("กรุณาเลือกเมนู");
 
-  const name = document.getElementById("customerName").value || "ไม่ระบุชื่อ";
-  const phone = document.getElementById("customerPhone").value || "-";
+  const name = customerName.value || "-";
+  const phone = customerPhone.value || "-";
   const payment = document.querySelector('input[name="pay"]:checked').value;
   const total = cart.reduce((s,i)=>s+i.price,0);
 
   const order = {
-    name,
-    phone,
-    payment,
+    name, phone, payment,
     items: cart,
     total,
     status: "new",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    createdAt: new Date()
   };
 
-  // 1) Firebase (ห่อ try/catch)
-  try{
-    await db.collection("orders").add(order);
-  }catch(e){
-    console.error("Firebase error", e);
-  }
+  await db.collection("orders").add(order);
 
-  // 2) Telegram (แยกอิสระ)
-  const message =
-`🛎 ออเดอร์ใหม่ - CHIVATS BLACK
+  const text =
+`🛎 ออเดอร์ใหม่ CHIVATS BLACK
 👤 ${name}
 📞 ${phone}
 💳 ${payment}
-💰 ${total} บาท
+💰 รวม ${total} บาท
 
 ${cart.map(i=>`• ${i.name} ${i.price}฿`).join("\n")}`;
 
-  try{
-    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
-        text: message
-      })
-    });
-  }catch(e){
-    console.error("Telegram error", e);
-  }
+  const body = new URLSearchParams({
+    chat_id: CHAT_ID,
+    text: text
+  });
 
-  alert("✅ ส่งออเดอร์เรียบร้อย");
-  cart=[];
-  renderCart();
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body: body
+  });
+
+  alert("ส่งออเดอร์เรียบร้อย");
+  cart=[]; renderCart();
 };
-
 </script>
 </body>
 </html>
-
-
-
