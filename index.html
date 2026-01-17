@@ -22,7 +22,8 @@ button#submitOrder{margin-top:14px;width:100%;padding:16px;font-size:18px;backgr
 
 <h1>🍢 CHIVATS BLACK</h1>
 
-<div class="menu">
+<!-- เมนู -->
+<div class="section menu">
   <button onclick="addItem('เคบับไก่ L',69)">เคบับไก่ L +69</button>
   <button onclick="addItem('เคบับไก่ M',60)">เคบับไก่ M +60</button>
   <button onclick="addItem('เฟรนฟรายเขย่า L',45)">เฟรนฟรายเขย่า L +45</button>
@@ -32,19 +33,28 @@ button#submitOrder{margin-top:14px;width:100%;padding:16px;font-size:18px;backgr
   <button onclick="addItem('เฟรนฟราย + ไก่ป๊อป',45)">เฟรนฟราย + ไก่ป๊อป +45</button>
 </div>
 
-<div class="card">
-  <div id="cartList">ยังไม่มีรายการ</div>
+<!-- ตะกร้า -->
+<div class="section card">
+  <div id="cartList" class="muted">ยังไม่มีรายการ</div>
   <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
 </div>
 
-<div class="card">
+<!-- ข้อมูลลูกค้า -->
+<div class="section card">
   <input id="customerName" placeholder="ชื่อลูกค้า">
   <input id="customerPhone" placeholder="เบอร์โทร">
 </div>
 
-<div class="card">
-  <label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
-  <label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
+<!-- วิธีชำระเงิน -->
+<div class="section card">
+  <div class="payment-option">
+    <input type="radio" name="pay" value="เงินสด" checked>
+    <span>เงินสด</span>
+  </div>
+  <div class="payment-option">
+    <input type="radio" name="pay" value="PromptPay">
+    <span>PromptPay</span>
+  </div>
 </div>
 
 <button id="submitOrder">ส่งออเดอร์</button>
@@ -127,3 +137,4 @@ ${cart.map(i=>`• ${i.name} ${i.price}฿`).join("\n")}`;
 </script>
 </body>
 </html>
+
