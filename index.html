@@ -12,27 +12,17 @@ body{margin:0;font-family:sans-serif;background:#111;color:#fff}
 .admin{max-width:1200px}
 h1,h2{text-align:center;color:#f5c04f}
 .hidden{display:none}
-
-/* CARD */
 .card{background:#1c1c1c;border-radius:14px;padding:14px;margin-top:14px}
 button{border:none;border-radius:14px;background:#f5c04f;font-weight:bold;cursor:pointer;padding:12px}
-
-/* CUSTOMER */
 .menu button{width:100%;margin:6px 0;font-size:16px}
 input{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:none;font-size:16px}
 .payment{display:flex;flex-direction:column;gap:10px}
 .payment label{display:flex;align-items:center;gap:10px}
-.payment input{accent-color:#f5c04f}
-#submitOrder{width:100%;font-size:18px;margin-top:16px}
-
-/* ADMIN */
 .tabs{display:flex;gap:8px;margin:12px 0}
 .tabs button{flex:1}
 .tabs .active{background:#ff9800}
 table{width:100%;border-collapse:collapse}
 th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
-
-/* MOBILE */
 @media(max-width:768px){
  table,thead,tbody,tr,td,th{display:block}
  th{display:none}
@@ -43,7 +33,7 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 
 <body>
 
-<!-- ================= CUSTOMER ================= -->
+<!-- CUSTOMER -->
 <div class="container" id="customerPage">
 <h1>🍢 CHIVATS BLACK</h1>
 
@@ -58,36 +48,27 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 </div>
 
 <div class="card">
-  <div id="cartList">ยังไม่มีรายการ</div>
-  <div>💰 รวม <span id="total">0</span> บาท</div>
+<div id="cartList">ยังไม่มีรายการ</div>
+<div>💰 รวม <span id="total">0</span> บาท</div>
 </div>
 
 <div class="card">
-  <input id="cName" placeholder="ชื่อลูกค้า">
-  <input id="cPhone" placeholder="เบอร์โทร">
+<input id="cName" placeholder="ชื่อลูกค้า">
+<input id="cPhone" placeholder="เบอร์โทร">
 </div>
 
 <div class="card payment">
-  <label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
-  <label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
+<label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
+<label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
 </div>
 
 <button id="submitOrder">ส่งออเดอร์</button>
 </div>
 
-<!-- ================= ADMIN LOGIN ================= -->
-<div class="container hidden" id="adminLogin">
-<h2>🔐 Admin Login</h2>
-<input id="adminUser" placeholder="Username">
-<input id="adminPass" type="password" placeholder="Password">
-<button onclick="login()">เข้าสู่ระบบ</button>
-</div>
+<!-- ADMIN -->
+<div class="container admin" id="adminPage">
+<h1>📦 ADMIN</h1>
 
-<!-- ================= ADMIN PANEL ================= -->
-<div class="container admin hidden" id="adminPage">
-<h1>📦 ADMIN – CHIVATS BLACK</h1>
-
-<!-- SUMMARY (ADMIN ONLY) -->
 <div class="card">
 📊 วันนี้:
 <b><span id="orderCount">0</span></b> ออเดอร์ |
@@ -95,21 +76,9 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 <b><span id="dailyTotal">0</span></b> บาท
 </div>
 
-<div class="tabs">
-<button class="active" onclick="setTab('new')">ออเดอร์ใหม่</button>
-<button onclick="setTab('working')">กำลังทำ</button>
-<button onclick="setTab('done')">เสร็จแล้ว</button>
-</div>
-
 <table>
 <thead>
-<tr>
-<th>วัน</th>
-<th>ลูกค้า</th>
-<th>รายการ</th>
-<th>ยอด</th>
-<th>จัดการ</th>
-</tr>
+<tr><th>วัน</th><th>ลูกค้า</th><th>ยอด</th></tr>
 </thead>
 <tbody id="orders"></tbody>
 </table>
@@ -119,7 +88,6 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ================= FIREBASE ================= */
 firebase.initializeApp({
  apiKey:"AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
  authDomain:"chivats-black-order.firebaseapp.com",
@@ -127,7 +95,7 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-/* ================= CUSTOMER ================= */
+/* CUSTOMER */
 let cart=[];
 function addItem(n,p){cart.push({name:n,price:p});render()}
 function render(){
@@ -136,10 +104,9 @@ function render(){
  : "ยังไม่มีรายการ";
  total.innerText=cart.reduce((s,i)=>s+i.price,0);
 }
-
 submitOrder.onclick=()=>{
  if(!cart.length) return alert("เลือกเมนูก่อน");
- const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+ const today = new Date().toISOString().slice(0,10);
 
  db.collection("orders").add({
   day: today,
@@ -147,7 +114,6 @@ submitOrder.onclick=()=>{
   phone: cPhone.value || "-",
   items: cart,
   total: cart.reduce((s,i)=>s+i.price,0),
-  status: "new",
   createdAt: new Date()
  });
 
@@ -155,74 +121,32 @@ submitOrder.onclick=()=>{
  alert("ส่งออเดอร์เรียบร้อย");
 };
 
-/* ================= ADMIN ================= */
-let tab="new";
+/* ADMIN – SUMMARY (ชัวร์) */
+const today = new Date().toISOString().slice(0,10);
 
-if(location.hash==="#admin"){
- customerPage.classList.add("hidden");
- adminLogin.classList.remove("hidden");
-}
+db.collection("orders")
+.onSnapshot(snap=>{
+ let sum=0, count=0;
+ orders.innerHTML="";
 
-function login(){
- if(adminUser.value==="admin" && adminPass.value==="1234"){
-  adminLogin.classList.add("hidden");
-  adminPage.classList.remove("hidden");
-  listen();
- }else{
-  alert("รหัสไม่ถูกต้อง");
- }
-}
+ snap.forEach(d=>{
+  const o=d.data();
 
-function setTab(t){
- tab=t;
- document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
- event.target.classList.add("active");
- listen();
-}
-
-function listen(){
- const today = new Date().toISOString().slice(0,10);
-
- db.collection("orders")
-   .where("day","==",today)
-   .onSnapshot(snap=>{
-     let sum=0, count=0;
-     orders.innerHTML="";
-
-     snap.forEach(d=>{
-       const o=d.data();
-       count++;
-       sum+=o.total;
-
-       if(o.status!==tab) return;
-
-       orders.innerHTML+=`
+  if(o.day === today){
+    count++;
+    sum += o.total;
+    orders.innerHTML += `
 <tr>
 <td>${o.day}</td>
-<td>${o.name}<br>${o.phone}</td>
-<td>${o.items.map(i=>i.name).join("<br>")}</td>
+<td>${o.name}</td>
 <td>${o.total}฿</td>
-<td>
-${o.status==="new"?`<button onclick="upd('${d.id}','working')">รับ</button>`:""}
-${o.status==="working"?`<button onclick="upd('${d.id}','done')">เสร็จ</button>`:""}
-<button onclick="del('${d.id}')">ลบ</button>
-</td>
 </tr>`;
-     });
+  }
+ });
 
-     orderCount.innerText=count;
-     dailyTotal.innerText=sum;
-   });
-}
-
-function upd(id,s){
- db.collection("orders").doc(id).update({status:s});
-}
-function del(id){
- if(confirm("ลบออเดอร์นี้?")){
-  db.collection("orders").doc(id).delete();
- }
-}
+ orderCount.innerText = count;
+ dailyTotal.innerText = sum;
+});
 </script>
 
 </body>
