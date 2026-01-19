@@ -9,12 +9,13 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:sans-serif;background:#111;color:#fff}
 .container{max-width:480px;margin:auto;padding:16px}
+.admin{max-width:1200px}
 h1,h2{text-align:center;color:#f5c04f}
-
-/* COMMON */
-.card{background:#1c1c1c;border-radius:14px;padding:14px;margin-top:14px}
-button{border:none;border-radius:14px;background:#f5c04f;font-weight:bold;cursor:pointer}
 .hidden{display:none}
+
+/* CARD */
+.card{background:#1c1c1c;border-radius:14px;padding:14px;margin-top:14px}
+button{border:none;border-radius:14px;background:#f5c04f;font-weight:bold;cursor:pointer;padding:10px 14px}
 
 /* CUSTOMER */
 .menu button{width:100%;margin:6px 0;padding:14px;font-size:16px}
@@ -25,7 +26,6 @@ input{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:none;font
 #submitOrder{width:100%;padding:16px;font-size:18px;margin-top:16px}
 
 /* ADMIN */
-.admin{max-width:1200px}
 .tabs{display:flex;gap:8px;margin:12px 0}
 .tabs button{flex:1}
 .tabs .active{background:#ff9800}
@@ -35,7 +35,7 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 .timer.orange{color:#ffc107}
 .timer.red{color:#ff5252}
 
-/* MOBILE ADMIN */
+/* MOBILE */
 @media(max-width:768px){
  table,thead,tbody,tr,td,th{display:block}
  th{display:none}
@@ -90,6 +90,12 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 <div class="container admin hidden" id="adminPage">
 <h1>📦 ADMIN – CHIVATS BLACK</h1>
 
+<!-- SUMMARY -->
+<div class="card">
+📊 วันนี้: <b><span id="orderCount">0</span></b> ออเดอร์ |
+💰 รวม <b><span id="dailyTotal">0</span></b> บาท
+</div>
+
 <div class="tabs">
 <button class="active" onclick="setTab('new')">ออเดอร์ใหม่</button>
 <button onclick="setTab('working')">กำลังทำ</button>
@@ -99,7 +105,12 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 <table>
 <thead>
 <tr>
-<th>เวลา</th><th>จับเวลา</th><th>ลูกค้า</th><th>รายการ</th><th>ยอด</th><th>จัดการ</th>
+<th>เวลา</th>
+<th>จับเวลา</th>
+<th>ลูกค้า</th>
+<th>รายการ</th>
+<th>ยอด</th>
+<th>จัดการ</th>
 </tr>
 </thead>
 <tbody id="orders"></tbody>
@@ -118,15 +129,17 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-/* ================= CUSTOMER LOGIC ================= */
+/* ================= CUSTOMER ================= */
 let cart=[];
 function addItem(n,p){cart.push({name:n,price:p});render()}
 function render(){
- cartList.innerHTML=cart.length?cart.map(i=>`• ${i.name} ${i.price}฿`).join("<br>"):"ยังไม่มีรายการ";
+ cartList.innerHTML=cart.length
+ ? cart.map(i=>`• ${i.name} ${i.price}฿`).join("<br>")
+ : "ยังไม่มีรายการ";
  total.innerText=cart.reduce((s,i)=>s+i.price,0);
 }
 submitOrder.onclick=()=>{
- if(!cart.length)return alert("เลือกเมนูก่อน");
+ if(!cart.length) return alert("เลือกเมนูก่อน");
  db.collection("orders").add({
   name:cName.value||"-",
   phone:cPhone.value||"-",
@@ -134,7 +147,7 @@ submitOrder.onclick=()=>{
   items:cart,
   total:cart.reduce((s,i)=>s+i.price,0),
   status:"new",
-  createdAt:new Date()   // ✅ ตรงนี้แก้ให้ถูกแล้ว
+  createdAt:new Date()
  });
  cart=[];render();
  alert("ส่งออเดอร์เรียบร้อย");
@@ -148,12 +161,13 @@ if(location.hash==="#admin"){
 }
 
 function login(){
- if(adminUser.value==="admin"&&adminPass.value==="1234"){
+ if(adminUser.value==="admin" && adminPass.value==="1234"){
   adminLogin.classList.add("hidden");
   adminPage.classList.remove("hidden");
   listen();
  }else alert("รหัสไม่ถูกต้อง");
 }
+
 function setTab(t){
  tab=t;
  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
@@ -162,16 +176,26 @@ function setTab(t){
 }
 
 function listen(){
+ const today = new Date().toDateString();
  db.collection("orders").orderBy("createdAt","desc")
- .onSnapshot(s=>{
+ .onSnapshot(snap=>{
   orders.innerHTML="";
-  s.forEach(d=>{
+  let sum=0,count=0;
+
+  snap.forEach(d=>{
    const o=d.data();
-   if(o.status!==tab)return;
+
+   if(o.createdAt && o.createdAt.toDate().toDateString()===today){
+    count++; sum+=o.total;
+   }
+
+   if(o.status!==tab) return;
+
    const sec=Math.floor((Date.now()-o.createdAt.toDate())/1000);
    const min=Math.floor(sec/60);
    const s2=sec%60;
    let c="green"; if(min>=5)c="orange"; if(min>=10)c="red";
+
    orders.innerHTML+=`
 <tr>
 <td>${o.createdAt.toDate().toLocaleString()}</td>
@@ -186,10 +210,14 @@ ${o.status==="working"?`<button onclick="upd('${d.id}','done')">เสร็จ<
 </td>
 </tr>`;
   });
+
+  orderCount.innerText=count;
+  dailyTotal.innerText=sum;
  });
 }
+
 function upd(id,s){db.collection("orders").doc(id).update({status:s})}
-function del(id){if(confirm("ลบออเดอร์?"))db.collection("orders").doc(id).delete()}
+function del(id){if(confirm("ลบออเดอร์?")) db.collection("orders").doc(id).delete()}
 </script>
 
 </body>
