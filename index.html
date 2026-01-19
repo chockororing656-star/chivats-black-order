@@ -8,28 +8,22 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:sans-serif;background:#111;color:#fff}
+h1,h2{text-align:center;color:#f5c04f}
 .container{max-width:480px;margin:auto;padding:16px}
 .admin{max-width:1200px}
-h1,h2{color:#f5c04f;text-align:center}
 .hidden{display:none}
 .card{background:#1c1c1c;border-radius:14px;padding:14px;margin-top:14px}
-button{border:none;border-radius:14px;background:#f5c04f;font-weight:bold;cursor:pointer;padding:10px 14px}
-.menu button{width:100%;margin:6px 0;padding:14px;font-size:16px}
-input{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:none;font-size:16px}
-.payment{display:flex;flex-direction:column;gap:12px}
-.payment label{display:flex;align-items:center;gap:12px}
-.payment input{width:18px;height:18px;accent-color:#f5c04f}
-#submitOrder{width:100%;padding:16px;font-size:18px;margin-top:16px}
-
-.tabs{display:flex;gap:8px;margin:12px 0}
+button{background:#f5c04f;border:none;border-radius:12px;padding:12px;font-weight:bold;cursor:pointer}
+.menu button{width:100%;margin:6px 0}
+input{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:none}
+.payment{display:flex;flex-direction:column;gap:10px}
+.payment label{display:flex;align-items:center;gap:10px}
+.payment input{accent-color:#f5c04f}
+.tabs{display:flex;gap:6px;margin:12px 0}
 .tabs button{flex:1}
 .tabs .active{background:#ff9800}
 table{width:100%;border-collapse:collapse}
 th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
-.timer.green{color:#4caf50}
-.timer.orange{color:#ffc107}
-.timer.red{color:#ff5252}
-
 @media(max-width:768px){
  table,thead,tbody,tr,td,th{display:block}
  th{display:none}
@@ -40,8 +34,8 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 
 <body>
 
-<!-- ================= CUSTOMER ================= -->
-<div class="container" id="customerPage">
+<!-- CUSTOMER -->
+<div class="container" id="customer">
 <h1>🍢 CHIVATS BLACK</h1>
 
 <div class="menu">
@@ -55,13 +49,13 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 </div>
 
 <div class="card">
-<div id="cartList">ยังไม่มีรายการ</div>
-<div>💰 รวม: <span id="total">0</span> บาท</div>
+<div id="cart">ยังไม่มีรายการ</div>
+<div>รวม <span id="total">0</span> บาท</div>
 </div>
 
 <div class="card">
-<input id="cName" placeholder="ชื่อลูกค้า">
-<input id="cPhone" placeholder="เบอร์โทร">
+<input id="name" placeholder="ชื่อลูกค้า">
+<input id="phone" placeholder="เบอร์โทร">
 </div>
 
 <div class="card payment">
@@ -69,21 +63,20 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 <label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
 </div>
 
-<button id="submitOrder">ส่งออเดอร์</button>
+<button onclick="submitOrder()">ส่งออเดอร์</button>
 </div>
 
-<!-- ================= ADMIN LOGIN ================= -->
-<div class="container hidden" id="adminLogin">
-<h2>🔐 Admin Login</h2>
-<input id="adminUser" placeholder="Username">
-<input id="adminPass" type="password" placeholder="Password">
+<!-- ADMIN LOGIN -->
+<div class="container hidden" id="login">
+<h2>Admin Login</h2>
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
 <button onclick="login()">เข้าสู่ระบบ</button>
 </div>
 
-<!-- ================= ADMIN ================= -->
-<div class="container admin hidden" id="adminPage">
+<!-- ADMIN -->
+<div class="container admin hidden" id="admin">
 <h1>📦 ADMIN</h1>
-<div id="summary"></div>
 
 <div class="tabs">
 <button class="active" onclick="setTab('new')">ใหม่</button>
@@ -93,7 +86,7 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 
 <table>
 <thead>
-<tr><th>คิว</th><th>เวลา</th><th>จับเวลา</th><th>ลูกค้า</th><th>รายการ</th><th>ยอด</th><th>จัดการ</th></tr>
+<tr><th>คิว</th><th>ลูกค้า</th><th>รายการ</th><th>ยอด</th><th>จัดการ</th></tr>
 </thead>
 <tbody id="orders"></tbody>
 </table>
@@ -103,7 +96,6 @@ th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ================= FIREBASE ================= */
 firebase.initializeApp({
  apiKey:"AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
  authDomain:"chivats-black-order.firebaseapp.com",
@@ -111,117 +103,76 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-/* ================= SOUND ================= */
-let audioCtx;
-function beep(){
- if(!audioCtx){
-  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
- }
- const o=audioCtx.createOscillator();
- const g=audioCtx.createGain();
- o.connect(g);g.connect(audioCtx.destination);
- o.frequency.value=880;g.gain.value=0.3;
- o.start();setTimeout(()=>o.stop(),200);
-}
-
-/* ================= CUSTOMER ================= */
+/* CUSTOMER */
 let cart=[];
-function addItem(n,p){cart.push({name:n,price:p});render()}
+function addItem(n,p){cart.push({n,p});render()}
 function render(){
- cartList.innerHTML=cart.length?cart.map(i=>`• ${i.name} ${i.price}฿`).join("<br>"):"ยังไม่มีรายการ";
- total.innerText=cart.reduce((s,i)=>s+i.price,0);
+ cart.innerHTML="";
+ document.getElementById("cart").innerHTML=cart.length?
+ cart.map(i=>`• ${i.n} ${i.p}฿`).join("<br>"):"ยังไม่มีรายการ";
+ document.getElementById("total").innerText=cart.reduce((s,i)=>s+i.p,0);
 }
-
-submitOrder.onclick=async()=>{
+async function submitOrder(){
  if(!cart.length)return alert("เลือกเมนูก่อน");
  const today=new Date().toDateString();
- const qSnap=await db.collection("orders").where("day","==",today).get();
- const queue=qSnap.size+1;
-
+ const q=(await db.collection("orders").where("day","==",today).get()).size+1;
  await db.collection("orders").add({
-  queue,
   day:today,
-  name:cName.value||"-",
-  phone:cPhone.value||"-",
-  payment:document.querySelector('[name=pay]:checked').value,
+  queue:q,
+  name:name.value||"-",
+  phone:phone.value||"-",
   items:cart,
-  total:cart.reduce((s,i)=>s+i.price,0),
+  total:cart.reduce((s,i)=>s+i.p,0),
   status:"new",
   createdAt:new Date()
  });
  cart=[];render();
- alert("ออเดอร์ของคุณคือคิวที่ "+queue);
-};
+ alert("คิวของคุณคือ "+q);
+}
 
-/* ================= ADMIN ================= */
+/* ADMIN */
 let tab="new";
 if(location.hash==="#admin"){
- customerPage.classList.add("hidden");
- adminLogin.classList.remove("hidden");
+ customer.classList.add("hidden");
+ login.classList.remove("hidden");
 }
-
 function login(){
- if(adminUser.value==="admin"&&adminPass.value==="1234"){
-  adminLogin.classList.add("hidden");
-  adminPage.classList.remove("hidden");
+ if(user.value==="admin"&&pass.value==="1234"){
+  login.classList.add("hidden");
+  admin.classList.remove("hidden");
   listen();
- }else alert("รหัสไม่ถูกต้อง");
+ }else alert("รหัสผิด");
 }
-
 function setTab(t){
  tab=t;
  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
  event.target.classList.add("active");
  listen();
 }
-
 function listen(){
  db.collection("orders").orderBy("createdAt","desc")
  .onSnapshot(s=>{
   orders.innerHTML="";
-  let total=0,count=0;
   s.forEach(d=>{
    const o=d.data();
    if(o.status!==tab)return;
-   count++;total+=o.total;
-   const sec=Math.floor((Date.now()-o.createdAt.toDate())/1000);
-   const min=Math.floor(sec/60);const s2=sec%60;
-   let c="green";if(min>=5)c="orange";if(min>=10)c="red";
    orders.innerHTML+=`
 <tr>
 <td>#${o.queue}</td>
-<td>${o.createdAt.toDate().toLocaleTimeString()}</td>
-<td class="timer ${c}">${min}:${s2.toString().padStart(2,"0")}</td>
 <td>${o.name}</td>
-<td>${o.items.map(i=>i.name).join("<br>")}</td>
+<td>${o.items.map(i=>i.n).join("<br>")}</td>
 <td>${o.total}฿</td>
 <td>
 ${o.status==="new"?`<button onclick="upd('${d.id}','working')">รับ</button>`:""}
 ${o.status==="working"?`<button onclick="upd('${d.id}','done')">เสร็จ</button>`:""}
-<button onclick="printBill('${d.id}')">พิมพ์</button>
+<button onclick="del('${d.id}')">ลบ</button>
 </td>
 </tr>`;
   });
-  summary.innerHTML=`📊 วันนี้ ${count} ออเดอร์ | รวม ${total} บาท`;
-  beep();
  });
 }
-
 function upd(id,s){db.collection("orders").doc(id).update({status:s})}
-
-function printBill(id){
- db.collection("orders").doc(id).get().then(d=>{
-  const o=d.data();
-  const w=window.open("","PRINT","width=300");
-  w.document.write(`<pre>
-CHIVATS BLACK
-Queue: ${o.queue}
-${o.items.map(i=>i.name+" "+i.price).join("\n")}
-Total: ${o.total}฿
-</pre>`);
-  w.print();w.close();
- });
-}
+function del(id){if(confirm("ลบออเดอร์?"))db.collection("orders").doc(id).delete()}
 </script>
 
 </body>
