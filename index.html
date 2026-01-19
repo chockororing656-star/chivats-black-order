@@ -7,165 +7,189 @@
 
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#111;
-  color:#fff;
-}
-.container{
-  max-width:480px;
-  margin:auto;
-  padding:16px;
-}
-h1{
-  text-align:center;
-  color:#f5c04f;
-  margin-bottom:12px;
-}
+body{margin:0;font-family:sans-serif;background:#111;color:#fff}
+.container{max-width:480px;margin:auto;padding:16px}
+h1,h2{text-align:center;color:#f5c04f}
 
-/* MENU */
-.menu button{
-  width:100%;
-  margin:6px 0;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:#f5c04f;
-  font-size:16px;
-  font-weight:bold;
-}
+/* COMMON */
+.card{background:#1c1c1c;border-radius:14px;padding:14px;margin-top:14px}
+button{border:none;border-radius:14px;background:#f5c04f;font-weight:bold;cursor:pointer}
+.hidden{display:none}
 
-/* CARD */
-.card{
-  background:#1c1c1c;
-  border-radius:14px;
-  padding:14px;
-  margin-top:14px;
-}
+/* CUSTOMER */
+.menu button{width:100%;margin:6px 0;padding:14px;font-size:16px}
+input{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:none;font-size:16px}
+.payment{display:flex;flex-direction:column;gap:12px}
+.payment label{display:flex;align-items:center;gap:12px;font-size:16px}
+.payment input{width:18px;height:18px;accent-color:#f5c04f}
+#submitOrder{width:100%;padding:16px;font-size:18px;margin-top:16px}
 
-/* INPUT */
-input{
-  width:100%;
-  padding:12px;
-  margin-top:8px;
-  border-radius:10px;
-  border:none;
-  font-size:16px;
-}
+/* ADMIN */
+.admin{max-width:1200px}
+.tabs{display:flex;gap:8px;margin:12px 0}
+.tabs button{flex:1}
+.tabs .active{background:#ff9800}
+table{width:100%;border-collapse:collapse}
+th,td{border-bottom:1px solid #333;padding:8px;font-size:14px}
+.timer.green{color:#4caf50}
+.timer.orange{color:#ffc107}
+.timer.red{color:#ff5252}
 
-/* CART */
-.total{
-  font-size:18px;
-  margin-top:8px;
-}
-
-/* PAYMENT (จัดระเบียบแล้ว) */
-.payment{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-}
-.payment label{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  font-size:18px;
-}
-.payment input[type="radio"]{
-  width:20px;
-  height:20px;
-  accent-color:#f5c04f;
-}
-
-/* BUTTON */
-button#submitOrder{
-  margin-top:18px;
-  width:100%;
-  padding:16px;
-  font-size:18px;
-  font-weight:bold;
-  background:#f5c04f;
-  border:none;
-  border-radius:16px;
+/* MOBILE ADMIN */
+@media(max-width:768px){
+ table,thead,tbody,tr,td,th{display:block}
+ th{display:none}
+ tr{background:#1c1c1c;border-radius:12px;padding:12px;margin-bottom:12px}
 }
 </style>
 </head>
 
 <body>
-<div class="container">
 
+<!-- ================= CUSTOMER ================= -->
+<div class="container" id="customerPage">
 <h1>🍢 CHIVATS BLACK</h1>
 
-<!-- MENU -->
 <div class="menu">
-  <button onclick="addItem('เคบับไก่ L',69)">เคบับไก่ L +69</button>
-  <button onclick="addItem('เคบับไก่ M',60)">เคบับไก่ M +60</button>
-  <button onclick="addItem('เฟรนฟรายเขย่า L',45)">เฟรนฟรายเขย่า L +45</button>
-  <button onclick="addItem('เฟรนฟรายเขย่า M',40)">เฟรนฟรายเขย่า M +40</button>
-  <button onclick="addItem('ไก่ป๊อปเขย่า L',45)">ไก่ป๊อปเขย่า L +45</button>
-  <button onclick="addItem('ไก่ป๊อปเขย่า M',40)">ไก่ป๊อปเขย่า M +40</button>
-  <button onclick="addItem('เฟรนฟราย + ไก่ป๊อป',45)">เฟรนฟราย + ไก่ป๊อป +45</button>
+<button onclick="addItem('เคบับไก่ L',69)">เคบับไก่ L +69</button>
+<button onclick="addItem('เคบับไก่ M',60)">เคบับไก่ M +60</button>
+<button onclick="addItem('เฟรนฟรายเขย่า L',45)">เฟรนฟรายเขย่า L +45</button>
+<button onclick="addItem('เฟรนฟรายเขย่า M',40)">เฟรนฟรายเขย่า M +40</button>
+<button onclick="addItem('ไก่ป๊อปเขย่า L',45)">ไก่ป๊อปเขย่า L +45</button>
+<button onclick="addItem('ไก่ป๊อปเขย่า M',40)">ไก่ป๊อปเขย่า M +40</button>
+<button onclick="addItem('เฟรนฟราย + ไก่ป๊อป',45)">เฟรนฟราย + ไก่ป๊อป +45</button>
 </div>
 
-<!-- CART -->
 <div class="card">
-  <div id="cartList">ยังไม่มีรายการ</div>
-  <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
+<div id="cartList">ยังไม่มีรายการ</div>
+<div>💰 รวม: <span id="total">0</span> บาท</div>
 </div>
 
-<!-- CUSTOMER -->
 <div class="card">
-  <h3>ข้อมูลลูกค้า</h3>
-  <input id="customerName" placeholder="ชื่อลูกค้า">
-  <input id="customerPhone" placeholder="เบอร์โทร">
+<input id="cName" placeholder="ชื่อลูกค้า">
+<input id="cPhone" placeholder="เบอร์โทร">
 </div>
 
-<!-- PAYMENT -->
 <div class="card payment">
-  <h3>วิธีชำระเงิน</h3>
-  <label>
-    <input type="radio" name="pay" value="เงินสด" checked>
-    เงินสด
-  </label>
-  <label>
-    <input type="radio" name="pay" value="PromptPay">
-    PromptPay
-  </label>
+<label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
+<label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
 </div>
 
 <button id="submitOrder">ส่งออเดอร์</button>
-
 </div>
 
+<!-- ================= ADMIN LOGIN ================= -->
+<div class="container hidden" id="adminLogin">
+<h2>🔐 Admin Login</h2>
+<input id="adminUser" placeholder="Username">
+<input id="adminPass" type="password" placeholder="Password">
+<button onclick="login()">เข้าสู่ระบบ</button>
+</div>
+
+<!-- ================= ADMIN PANEL ================= -->
+<div class="container admin hidden" id="adminPage">
+<h1>📦 ADMIN – CHIVATS BLACK</h1>
+
+<div class="tabs">
+<button class="active" onclick="setTab('new')">ออเดอร์ใหม่</button>
+<button onclick="setTab('working')">กำลังทำ</button>
+<button onclick="setTab('done')">เสร็จแล้ว</button>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>เวลา</th><th>จับเวลา</th><th>ลูกค้า</th><th>รายการ</th><th>ยอด</th><th>จัดการ</th>
+</tr>
+</thead>
+<tbody id="orders"></tbody>
+</table>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
+/* ================= FIREBASE ================= */
+firebase.initializeApp({
+ apiKey:"AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
+ authDomain:"chivats-black-order.firebaseapp.com",
+ projectId:"chivats-black-order"
+});
+const db=firebase.firestore();
+
+/* ================= CUSTOMER LOGIC ================= */
 let cart=[];
-
-function addItem(name,price){
-  cart.push({name,price});
-  renderCart();
+function addItem(n,p){cart.push({name:n,price:p});render()}
+function render(){
+ cartList.innerHTML=cart.length?cart.map(i=>`• ${i.name} ${i.price}฿`).join("<br>"):"ยังไม่มีรายการ";
+ total.innerText=cart.reduce((s,i)=>s+i.price,0);
 }
-
-function renderCart(){
-  const list=document.getElementById("cartList");
-  if(cart.length===0){
-    list.innerText="ยังไม่มีรายการ";
-  }else{
-    list.innerHTML=cart.map(i=>`• ${i.name} ${i.price}฿`).join("<br>");
-  }
-  document.getElementById("total").innerText=
-    cart.reduce((s,i)=>s+i.price,0);
-}
-
-document.getElementById("submitOrder").onclick=()=>{
-  if(cart.length===0){
-    alert("กรุณาเลือกเมนู");
-    return;
-  }
-  alert("ส่งออเดอร์เรียบร้อย");
-  cart=[];
-  renderCart();
+submitOrder.onclick=()=>{
+ if(!cart.length)return alert("เลือกเมนูก่อน");
+ db.collection("orders").add({
+  name:cName.value||"-",
+  phone:cPhone.value||"-",
+  payment:document.querySelector('[name=pay]:checked').value,
+  items:cart,
+  total:cart.reduce((s,i)=>s+i.price,0),
+  status:"new",
+  createdAt:new Date()   // ✅ ตรงนี้แก้ให้ถูกแล้ว
+ });
+ cart=[];render();
+ alert("ส่งออเดอร์เรียบร้อย");
 };
+
+/* ================= ADMIN ================= */
+let tab="new";
+if(location.hash==="#admin"){
+ customerPage.classList.add("hidden");
+ adminLogin.classList.remove("hidden");
+}
+
+function login(){
+ if(adminUser.value==="admin"&&adminPass.value==="1234"){
+  adminLogin.classList.add("hidden");
+  adminPage.classList.remove("hidden");
+  listen();
+ }else alert("รหัสไม่ถูกต้อง");
+}
+function setTab(t){
+ tab=t;
+ document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+ event.target.classList.add("active");
+ listen();
+}
+
+function listen(){
+ db.collection("orders").orderBy("createdAt","desc")
+ .onSnapshot(s=>{
+  orders.innerHTML="";
+  s.forEach(d=>{
+   const o=d.data();
+   if(o.status!==tab)return;
+   const sec=Math.floor((Date.now()-o.createdAt.toDate())/1000);
+   const min=Math.floor(sec/60);
+   const s2=sec%60;
+   let c="green"; if(min>=5)c="orange"; if(min>=10)c="red";
+   orders.innerHTML+=`
+<tr>
+<td>${o.createdAt.toDate().toLocaleString()}</td>
+<td class="timer ${c}">${min}:${s2.toString().padStart(2,"0")}</td>
+<td>${o.name}<br>${o.phone}</td>
+<td>${o.items.map(i=>i.name).join("<br>")}</td>
+<td>${o.total}฿</td>
+<td>
+${o.status==="new"?`<button onclick="upd('${d.id}','working')">รับ</button>`:""}
+${o.status==="working"?`<button onclick="upd('${d.id}','done')">เสร็จ</button>`:""}
+<button onclick="del('${d.id}')">ลบ</button>
+</td>
+</tr>`;
+  });
+ });
+}
+function upd(id,s){db.collection("orders").doc(id).update({status:s})}
+function del(id){if(confirm("ลบออเดอร์?"))db.collection("orders").doc(id).delete()}
 </script>
 
 </body>
