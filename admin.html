@@ -6,161 +6,167 @@
 <title>ADMIN – CHIVATS BLACK</title>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#111;color:#fff}
-h1,h2{text-align:center;color:#f5c04f}
-.container{max-width:1200px;margin:auto;padding:16px}
-.section{margin-top:30px}
-table{width:100%;border-collapse:collapse;margin-top:8px}
-th,td{border:1px solid #333;padding:8px;font-size:14px;vertical-align:top}
-th{background:#222}
-button{padding:6px 10px;border:none;border-radius:6px;background:#f5c04f;cursor:pointer;margin:2px}
-input{width:100%;padding:10px;border-radius:8px;border:none;margin-top:8px}
-#login,#enableSound{max-width:320px;margin:120px auto;text-align:center}
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#111;
+  color:#fff;
+}
+.container{
+  max-width:1000px;
+  margin:auto;
+  padding:16px;
+}
+h1{color:#f5c04f}
+
+/* LOGIN */
+#loginBox{
+  max-width:360px;
+  margin:80px auto;
+  background:#1c1c1c;
+  padding:20px;
+  border-radius:14px;
+}
+input{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+  font-size:16px;
+}
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#f5c04f;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:16px;
+}
+th,td{
+  border-bottom:1px solid #333;
+  padding:10px;
+  text-align:left;
+}
+th{color:#f5c04f}
+.status{
+  font-weight:bold;
+}
+.new{color:#ff5252}
+.accepted{color:#4caf50}
+
+/* ACTIONS */
+.actions button{
+  margin-right:6px;
+}
 </style>
 </head>
 
 <body>
 
-<!-- 🔐 LOGIN -->
-<div id="login">
-  <h2>🔐 ADMIN LOGIN</h2>
-  <input id="password" type="password" placeholder="รหัสผ่าน">
+<!-- LOGIN -->
+<div id="loginBox">
+  <h2>🔐 Admin Login</h2>
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
   <button onclick="login()">เข้าสู่ระบบ</button>
 </div>
 
-<!-- 🔊 ENABLE SOUND -->
-<div id="enableSound" style="display:none">
-  <h2>🔊 เปิดเสียงแจ้งเตือน</h2>
-  <p>ต้องกดปุ่มนี้ 1 ครั้ง<br>เพื่อให้ Browser อนุญาตเสียง</p>
-  <button onclick="enableSound()">เปิดเสียง</button>
+<!-- ADMIN -->
+<div class="container" id="adminPanel" style="display:none">
+  <h1>📦 ออเดอร์ทั้งหมด – CHIVATS BLACK</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>เวลา</th>
+        <th>ลูกค้า</th>
+        <th>รายการ</th>
+        <th>ยอด</th>
+        <th>สถานะ</th>
+        <th>จัดการ</th>
+      </tr>
+    </thead>
+    <tbody id="orderTable"></tbody>
+  </table>
 </div>
 
-<!-- 📦 ADMIN -->
-<div id="admin" style="display:none">
-<div class="container">
-<h1>📦 CHIVATS BLACK – ADMIN</h1>
+<!-- 🔔 SOUND -->
+<audio id="notifySound">
+  <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3">
+</audio>
 
-<div class="section">
-<h2>⏳ ออเดอร์ใหม่</h2>
-<table><tbody id="new"></tbody></table>
-</div>
-
-<div class="section">
-<h2>▶️ รับออเดอร์แล้ว</h2>
-<table><tbody id="accepted"></tbody></table>
-</div>
-
-<div class="section">
-<h2>🍳 กำลังทำออเดอร์</h2>
-<table><tbody id="cooking"></tbody></table>
-</div>
-
-<div class="section">
-<h2>✅ ออเดอร์เสร็จแล้ว</h2>
-<table><tbody id="done"></tbody></table>
-</div>
-
-</div>
-</div>
-
-<!-- 🔊 AUDIO -->
-<audio id="ding" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
-
-<!-- Firebase -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ================= CONFIG ================= */
-const ADMIN_PASSWORD = "1234"; // 🔐 เปลี่ยนรหัสตรงนี้
-const firebaseConfig = {
+/* 🔥 FIREBASE CONFIG */
+firebase.initializeApp({
   apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
   authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order"
-};
+  projectId: "chivats-black-order",
+});
+const db = firebase.firestore();
 
-/* ================= LOGIN ================= */
-let soundEnabled = false;
-let audioUnlocked = false;
-let audioCtx, ding;
-
+/* 🔐 LOGIN */
 function login(){
-  if(password.value === ADMIN_PASSWORD){
-    document.getElementById("login").style.display="none";
-    document.getElementById("enableSound").style.display="block";
+  const u=user.value;
+  const p=pass.value;
+  if(u==="admin" && p==="1234"){
+    loginBox.style.display="none";
+    adminPanel.style.display="block";
+    listenOrders();
   }else{
     alert("รหัสไม่ถูกต้อง");
   }
 }
 
-/* ================= AUDIO UNLOCK ================= */
-function unlockAudio(){
-  if(audioUnlocked) return;
+/* 🔔 REALTIME ORDERS */
+let firstLoad=true;
+function listenOrders(){
+  db.collection("orders").orderBy("createdAt","desc")
+  .onSnapshot(snap=>{
+    if(!firstLoad){
+      document.getElementById("notifySound").play();
+    }
+    firstLoad=false;
 
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  ding = document.getElementById("ding");
-
-  const source = audioCtx.createMediaElementSource(ding);
-  source.connect(audioCtx.destination);
-
-  ding.muted = true;
-  ding.play().then(()=>{
-    ding.pause();
-    ding.currentTime = 0;
-    ding.muted = false;
-    audioUnlocked = true;
-    console.log("🔊 Audio unlocked");
-  }).catch(e=>{
-    console.log("Unlock failed", e);
+    orderTable.innerHTML="";
+    snap.forEach(doc=>{
+      const o=doc.data();
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td>${new Date(o.createdAt.seconds*1000).toLocaleString()}</td>
+        <td>${o.name}<br>${o.phone}</td>
+        <td>${o.items.map(i=>i.name).join("<br>")}</td>
+        <td>${o.total}฿</td>
+        <td class="status ${o.status}">${o.status}</td>
+        <td class="actions">
+          <button onclick="accept('${doc.id}')">รับ</button>
+          <button onclick="del('${doc.id}')">ลบ</button>
+        </td>
+      `;
+      orderTable.appendChild(tr);
+    });
   });
 }
 
-function enableSound(){
-  unlockAudio();              // 🔥 สำคัญมาก
-  soundEnabled = true;
-  document.getElementById("enableSound").style.display="none";
-  document.getElementById("admin").style.display="block";
-  startFirebase();
+/* ACTIONS */
+function accept(id){
+  db.collection("orders").doc(id).update({status:"accepted"});
 }
-
-/* ================= FIREBASE ================= */
-function startFirebase(){
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  let firstLoad = true;
-
-  db.collection("orders")
-    .orderBy("createdAt","desc")
-    .onSnapshot(snap=>{
-      ["new","accepted","cooking","done"].forEach(s=>{
-        document.getElementById(s).innerHTML="";
-      });
-
-      snap.forEach(doc=>{
-        const o = doc.data();
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-<td>${o.createdAt?.toDate().toLocaleString("th-TH") || ""}</td>
-<td>${o.name}<br>${o.phone}</td>
-<td>${o.items.map(i=>`• ${i.name}`).join("<br>")}</td>
-<td>${o.total} ฿</td>
-<td>
-${o.status==="new"?`<button onclick="setStatus('${doc.id}','accepted')">รับ</button>`:""}
-${o.status==="accepted"?`<button onclick="setStatus('${doc.id}','cooking')">ทำ</button>`:""}
-${o.status==="cooking"?`<button onclick="setStatus('${doc.id}','done')">เสร็จ</button>`:""}
-</td>`;
-        document.getElementById(o.status || "new").appendChild(tr);
-      });
-
-      if(!firstLoad && soundEnabled && audioUnlocked){
-        ding.play();
-      }
-      firstLoad = false;
-    });
-
-  window.setStatus = (id,status)=>{
-    db.collection("orders").doc(id).update({status});
-  };
+function del(id){
+  if(confirm("ลบออเดอร์นี้?")){
+    db.collection("orders").doc(id).delete();
+  }
 }
 </script>
 
