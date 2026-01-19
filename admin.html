@@ -13,7 +13,7 @@ body{
   color:#fff;
 }
 .container{
-  max-width:1000px;
+  max-width:1200px;
   margin:auto;
   padding:16px;
 }
@@ -44,28 +44,59 @@ button{
   cursor:pointer;
 }
 
+/* TABS */
+.tabs{
+  display:flex;
+  gap:8px;
+  margin:12px 0;
+}
+.tabs button{
+  flex:1;
+}
+.tabs button.active{
+  background:#ff9800;
+}
+
 /* TABLE */
 table{
   width:100%;
   border-collapse:collapse;
-  margin-top:16px;
 }
 th,td{
   border-bottom:1px solid #333;
   padding:10px;
-  text-align:left;
 }
 th{color:#f5c04f}
-.status{
+.status-new{color:#ff5252}
+.status-working{color:#ffc107}
+.status-done{color:#4caf50}
+
+.timer{
   font-weight:bold;
 }
-.new{color:#ff5252}
-.accepted{color:#4caf50}
+.timer.green{color:#4caf50}
+.timer.orange{color:#ffc107}
+.timer.red{color:#ff5252}
 
 /* ACTIONS */
 .actions button{
   margin-right:6px;
 }
+
+/* MOBILE */
+@media(max-width:768px){
+  table,thead,tbody,tr,td,th{display:block}
+  th{display:none}
+  tr{
+    background:#1c1c1c;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:12px;
+  }
+}
+
+/* SOUND */
+audio{display:none}
 </style>
 </head>
 
@@ -81,12 +112,19 @@ th{color:#f5c04f}
 
 <!-- ADMIN -->
 <div class="container" id="adminPanel" style="display:none">
-  <h1>📦 ออเดอร์ทั้งหมด – CHIVATS BLACK</h1>
+  <h1>📦 ออเดอร์ – CHIVATS BLACK</h1>
+
+  <div class="tabs">
+    <button onclick="setTab('new')" class="active">ออเดอร์ใหม่</button>
+    <button onclick="setTab('working')">กำลังทำ</button>
+    <button onclick="setTab('done')">เสร็จแล้ว</button>
+  </div>
 
   <table>
     <thead>
       <tr>
         <th>เวลา</th>
+        <th>จับเวลา</th>
         <th>ลูกค้า</th>
         <th>รายการ</th>
         <th>ยอด</th>
@@ -98,75 +136,80 @@ th{color:#f5c04f}
   </table>
 </div>
 
-<!-- 🔔 SOUND -->
 <audio id="notifySound">
   <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3">
 </audio>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* 🔥 FIREBASE CONFIG */
 firebase.initializeApp({
-  apiKey: "AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
-  authDomain: "chivats-black-order.firebaseapp.com",
-  projectId: "chivats-black-order",
+  apiKey:"AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
+  authDomain:"chivats-black-order.firebaseapp.com",
+  projectId:"chivats-black-order",
 });
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-/* 🔐 LOGIN */
+let currentTab="new";
+let firstLoad=true;
+
 function login(){
-  const u=user.value;
-  const p=pass.value;
-  if(u==="admin" && p==="1234"){
+  if(user.value==="admin" && pass.value==="1234"){
     loginBox.style.display="none";
     adminPanel.style.display="block";
     listenOrders();
-  }else{
-    alert("รหัสไม่ถูกต้อง");
-  }
+  }else alert("รหัสไม่ถูกต้อง");
 }
 
-/* 🔔 REALTIME ORDERS */
-let firstLoad=true;
+function setTab(tab){
+  currentTab=tab;
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
+  listenOrders();
+}
+
 function listenOrders(){
   db.collection("orders").orderBy("createdAt","desc")
   .onSnapshot(snap=>{
-    if(!firstLoad){
-      document.getElementById("notifySound").play();
-    }
+    if(!firstLoad) notifySound.play();
     firstLoad=false;
 
     orderTable.innerHTML="";
     snap.forEach(doc=>{
       const o=doc.data();
-      const tr=document.createElement("tr");
-      tr.innerHTML=`
+      if(o.status!==currentTab) return;
+
+      const sec=Math.floor((Date.now()-o.createdAt.seconds*1000)/1000);
+      const min=Math.floor(sec/60);
+      const s=sec%60;
+      let color="green";
+      if(min>=5) color="orange";
+      if(min>=10) color="red";
+
+      orderTable.innerHTML+=`
+      <tr>
         <td>${new Date(o.createdAt.seconds*1000).toLocaleString()}</td>
+        <td class="timer ${color}">${min}:${s.toString().padStart(2,"0")}</td>
         <td>${o.name}<br>${o.phone}</td>
         <td>${o.items.map(i=>i.name).join("<br>")}</td>
         <td>${o.total}฿</td>
-        <td class="status ${o.status}">${o.status}</td>
+        <td class="status-${o.status}">${o.status}</td>
         <td class="actions">
-          <button onclick="accept('${doc.id}')">รับ</button>
+          ${o.status==="new"?`<button onclick="update('${doc.id}','working')">รับ</button>`:""}
+          ${o.status==="working"?`<button onclick="update('${doc.id}','done')">เสร็จ</button>`:""}
           <button onclick="del('${doc.id}')">ลบ</button>
         </td>
-      `;
-      orderTable.appendChild(tr);
+      </tr>`;
     });
   });
 }
 
-/* ACTIONS */
-function accept(id){
-  db.collection("orders").doc(id).update({status:"accepted"});
+function update(id,status){
+  db.collection("orders").doc(id).update({status});
 }
 function del(id){
-  if(confirm("ลบออเดอร์นี้?")){
-    db.collection("orders").doc(id).delete();
-  }
+  if(confirm("ลบออเดอร์นี้?")) db.collection("orders").doc(id).delete();
 }
 </script>
 
