@@ -9,8 +9,8 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:system-ui;
-  background:#0f0f0f;
+  font-family:sans-serif;
+  background:#111;
   color:#fff;
 }
 .container{
@@ -18,10 +18,13 @@ body{
   margin:auto;
   padding:16px;
 }
-h1,h2{
+h1{
   text-align:center;
   color:#f5c04f;
+  margin-bottom:12px;
 }
+
+/* MENU */
 .menu button{
   width:100%;
   margin:6px 0;
@@ -32,201 +35,138 @@ h1,h2{
   font-size:16px;
   font-weight:bold;
 }
+
+/* CARD */
 .card{
   background:#1c1c1c;
-  border-radius:12px;
+  border-radius:14px;
   padding:14px;
-  margin-top:12px;
+  margin-top:14px;
 }
+
+/* INPUT */
 input{
   width:100%;
   padding:12px;
-  margin:6px 0;
-  border-radius:8px;
+  margin-top:8px;
+  border-radius:10px;
   border:none;
-  font-size:15px;
+  font-size:16px;
 }
+
+/* CART */
 .total{
   font-size:18px;
   margin-top:8px;
+}
+
+/* PAYMENT (จัดระเบียบแล้ว) */
 .payment{
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:14px;
 }
-
 .payment label{
   display:flex;
   align-items:center;
-  gap:12px;
-  font-size:16px;
-  cursor:pointer;
+  gap:14px;
+  font-size:18px;
 }
-
 .payment input[type="radio"]{
-  width:18px;
-  height:18px;
+  width:20px;
+  height:20px;
   accent-color:#f5c04f;
 }
-button.main{
-  margin-top:14px;
+
+/* BUTTON */
+button#submitOrder{
+  margin-top:18px;
   width:100%;
   padding:16px;
   font-size:18px;
+  font-weight:bold;
   background:#f5c04f;
   border:none;
-  border-radius:14px;
-  font-weight:bold;
+  border-radius:16px;
 }
-.hidden{display:none}
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-th,td{
-  border-bottom:1px solid #333;
-  padding:8px;
-  text-align:left;
-  font-size:14px;
-}
-.status{
-  font-size:12px;
-  padding:4px 8px;
-  border-radius:6px;
-}
-.new{background:#444}
-.doing{background:#c97c00}
-.done{background:#2d7d46}
 </style>
 </head>
 
 <body>
+<div class="container">
 
-<div class="container" id="customerPage">
 <h1>🍢 CHIVATS BLACK</h1>
 
+<!-- MENU -->
 <div class="menu">
-<button onclick="addItem('เคบับไก่ L',69)">เคบับไก่ L +69</button>
-<button onclick="addItem('เคบับไก่ M',60)">เคบับไก่ M +60</button>
-<button onclick="addItem('เฟรนฟรายเขย่า L',45)">เฟรนฟรายเขย่า L +45</button>
-<button onclick="addItem('เฟรนฟรายเขย่า M',40)">เฟรนฟรายเขย่า M +40</button>
-<button onclick="addItem('ไก่ป๊อปเขย่า L',45)">ไก่ป๊อปเขย่า L +45</button>
-<button onclick="addItem('ไก่ป๊อปเขย่า M',40)">ไก่ป๊อปเขย่า M +40</button>
-<button onclick="addItem('เฟรนฟราย + ไก่ป๊อป',45)">เฟรนฟราย + ไก่ป๊อป +45</button>
+  <button onclick="addItem('เคบับไก่ L',69)">เคบับไก่ L +69</button>
+  <button onclick="addItem('เคบับไก่ M',60)">เคบับไก่ M +60</button>
+  <button onclick="addItem('เฟรนฟรายเขย่า L',45)">เฟรนฟรายเขย่า L +45</button>
+  <button onclick="addItem('เฟรนฟรายเขย่า M',40)">เฟรนฟรายเขย่า M +40</button>
+  <button onclick="addItem('ไก่ป๊อปเขย่า L',45)">ไก่ป๊อปเขย่า L +45</button>
+  <button onclick="addItem('ไก่ป๊อปเขย่า M',40)">ไก่ป๊อปเขย่า M +40</button>
+  <button onclick="addItem('เฟรนฟราย + ไก่ป๊อป',45)">เฟรนฟราย + ไก่ป๊อป +45</button>
 </div>
 
+<!-- CART -->
 <div class="card">
-<div id="cartList">ยังไม่มีรายการ</div>
-<div class="total">💰 รวม: <span id="total">0</span> บาท</div>
+  <div id="cartList">ยังไม่มีรายการ</div>
+  <div class="total">💰 ยอดรวม: <span id="total">0</span> บาท</div>
 </div>
 
+<!-- CUSTOMER -->
 <div class="card">
-<h3>ข้อมูลลูกค้า</h3>
-<input id="name" placeholder="ชื่อลูกค้า">
-<input id="phone" placeholder="เบอร์โทร">
+  <h3>ข้อมูลลูกค้า</h3>
+  <input id="customerName" placeholder="ชื่อลูกค้า">
+  <input id="customerPhone" placeholder="เบอร์โทร">
 </div>
 
+<!-- PAYMENT -->
 <div class="card payment">
-<label><input type="radio" name="pay" value="เงินสด" checked> เงินสด</label>
-<label><input type="radio" name="pay" value="PromptPay"> PromptPay</label>
+  <h3>วิธีชำระเงิน</h3>
+  <label>
+    <input type="radio" name="pay" value="เงินสด" checked>
+    เงินสด
+  </label>
+  <label>
+    <input type="radio" name="pay" value="PromptPay">
+    PromptPay
+  </label>
 </div>
 
-<button class="main" onclick="submitOrder()">ส่งออเดอร์</button>
+<button id="submitOrder">ส่งออเดอร์</button>
+
 </div>
-
-<div class="container hidden" id="adminLogin">
-<h2>🔐 Admin Login</h2>
-<input id="adminUser" placeholder="username">
-<input id="adminPass" type="password" placeholder="password">
-<button class="main" onclick="login()">เข้าสู่ระบบ</button>
-</div>
-
-<div class="container hidden" id="adminPage">
-<h2>📦 ออเดอร์ทั้งหมด</h2>
-<table>
-<thead>
-<tr><th>ลูกค้า</th><th>รายการ</th><th>สถานะ</th><th></th></tr>
-</thead>
-<tbody id="orders"></tbody>
-</table>
-</div>
-
-<audio id="beep">
-<source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
-</audio>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig={
- apiKey:"AIzaSyC03JcyEyEg4iWVKMfgcpDR82EUiFOXMd4",
- authDomain:"chivats-black-order.firebaseapp.com",
- projectId:"chivats-black-order"
-};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
-
 let cart=[];
 
-function addItem(n,p){cart.push({n,p});render()}
-function render(){
- cartList.innerHTML=cart.length?
- cart.map(i=>`• ${i.n} ${i.p}฿`).join("<br>"):
- "ยังไม่มีรายการ";
- total.innerText=cart.reduce((s,i)=>s+i.p,0);
+function addItem(name,price){
+  cart.push({name,price});
+  renderCart();
 }
 
-function submitOrder(){
- if(!cart.length)return alert("เลือกเมนูก่อน");
- db.collection("orders").add({
-  name:name.value||"-",
-  phone:phone.value||"-",
-  pay:document.querySelector('[name=pay]:checked').value,
-  items:cart,
-  total:cart.reduce((s,i)=>s+i.p,0),
-  status:"new",
-  time:new Date()
- });
- cart=[];render();
- alert("ส่งออเดอร์แล้ว");
+function renderCart(){
+  const list=document.getElementById("cartList");
+  if(cart.length===0){
+    list.innerText="ยังไม่มีรายการ";
+  }else{
+    list.innerHTML=cart.map(i=>`• ${i.name} ${i.price}฿`).join("<br>");
+  }
+  document.getElementById("total").innerText=
+    cart.reduce((s,i)=>s+i.price,0);
 }
 
-if(location.hash==="#admin"){
- customerPage.classList.add("hidden");
- adminLogin.classList.remove("hidden");
-}
-
-function login(){
- if(adminUser.value==="admin"&&adminPass.value==="1234"){
-  adminLogin.classList.add("hidden");
-  adminPage.classList.remove("hidden");
-  loadOrders();
- }else alert("รหัสไม่ถูกต้อง");
-}
-
-function loadOrders(){
- db.collection("orders").orderBy("time","desc")
- .onSnapshot(s=>{
-  orders.innerHTML="";
-  document.getElementById("beep").play();
-  s.forEach(d=>{
-   const o=d.data();
-   orders.innerHTML+=`
-<tr>
-<td>${o.name}</td>
-<td>${o.items.map(i=>i.n).join("<br>")}</td>
-<td><span class="status ${o.status}">${o.status}</span></td>
-<td>
-<button onclick="db.collection('orders').doc('${d.id}').update({status:'doing'})">รับ</button>
-<button onclick="db.collection('orders').doc('${d.id}').update({status:'done'})">เสร็จ</button>
-</td>
-</tr>`;
-  });
- });
-}
+document.getElementById("submitOrder").onclick=()=>{
+  if(cart.length===0){
+    alert("กรุณาเลือกเมนู");
+    return;
+  }
+  alert("ส่งออเดอร์เรียบร้อย");
+  cart=[];
+  renderCart();
+};
 </script>
 
 </body>
 </html>
-
